@@ -37,8 +37,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# --- Vector DB / data artifacts ---
-db/
+# --- Local database artifacts (NOT the db/ source package — that's real
+#     application code and must stay tracked; Qdrant is fully cloud-hosted,
+#     so there's no local vector-store directory to ignore here) ---
 *.sqlite3
 *.db
 
