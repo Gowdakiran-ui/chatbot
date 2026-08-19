@@ -1,0 +1,25 @@
+{"query": "Nirav Modi Punjab National Bank fraud case summary", "expected_chunk_ids": ["india_case_003_summary"]}
+{"query": "Facebook Cambridge Analytica data misuse political manipulation scandal", "expected_chunk_ids": ["europe_case_016_summary"]}
+{"query": "Exxon Valdez oil spill Alaska environmental disaster", "expected_chunk_ids": ["america_case_030_summary"]}
+{"query": "Wells Fargo unauthorized fake accounts sales culture scandal", "expected_chunk_ids": ["america_case_005_summary"]}
+{"query": "Equifax data breach cybersecurity failure", "expected_chunk_ids": ["america_case_004_summary"]}
+{"query": "Yahoo data breach multi-year concealment nondisclosure", "expected_chunk_ids": ["america_case_015_summary"]}
+{"query": "Marriott Starwood data breach M&A due diligence failure", "expected_chunk_ids": ["europe_case_015_summary"]}
+{"query": "Volkswagen Dieselgate emissions regulatory fraud", "expected_chunk_ids": ["europe_case_001_summary"]}
+{"query": "Boeing product safety mass casualty design defect", "expected_chunk_ids": ["america_case_006_summary"]}
+{"query": "WeWork governance failure founder self dealing valuation collapse", "expected_chunk_ids": ["america_case_024_summary"]}
+{"query": "Wirecard accounting fraud corporate collapse", "expected_chunk_ids": ["europe_case_003_summary"]}
+{"query": "Parmalat accounting fraud Europe's Enron", "expected_chunk_ids": ["europe_case_011_summary"]}
+{"query": "Kingfisher Airlines Vijay Mallya loan default fugitive economic offence", "expected_chunk_ids": ["india_case_005_summary"]}
+{"query": "Uber workplace culture sexual harassment leadership crisis", "expected_chunk_ids": ["america_case_025_summary"]}
+{"query": "United Airlines viral customer mistreatment incident", "expected_chunk_ids": ["america_case_003_summary"]}
+{"query": "H&M racial insensitivity advertising social media backlash", "expected_chunk_ids": ["europe_case_006_summary"]}
+{"query": "DHFL NBFC collapse fund diversion financial fraud", "expected_chunk_ids": ["india_case_009_summary"]}
+{"query": "ABG Shipyard largest bank loan fraud in India", "expected_chunk_ids": ["india_case_014_summary"]}
+{"query": "Fortis Healthcare promoter fund diversion governance collapse", "expected_chunk_ids": ["india_case_017_summary"]}
+{"query": "National Stock Exchange India insider preferential access scandal", "expected_chunk_ids": ["india_case_019_summary"]}
+{"query": "Danske Bank Estonian branch money laundering scandal", "expected_chunk_ids": ["europe_case_002_summary"]}
+{"query": "Credit Suisse risk management financial scandal", "expected_chunk_ids": ["europe_case_013_summary"]}
+{"query": "Siemens systemic bribery corruption scandal", "expected_chunk_ids": ["europe_case_005_summary"]}
+{"query": "Takata airbag defect regulatory concealment mass recall", "expected_chunk_ids": ["america_case_012_summary"]}
+{"query": "Thomas Cook corporate collapse insolvency mass consumer impact", "expected_chunk_ids": ["europe_case_008_summary"]}

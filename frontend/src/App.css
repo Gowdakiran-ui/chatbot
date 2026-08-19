@@ -1,0 +1,188 @@
+.authenticated-shell {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-width: 880px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 24px 24px;
+  border-top: 2px solid transparent;
+  transition: border-color 200ms ease, background 200ms ease;
+}
+
+/* Crisis mode should feel more serious/urgent than the philosophy-advice
+   mode the moment it's active — not just a different toggle label. */
+.authenticated-shell.is-crisis {
+  border-top-color: var(--crisis);
+  box-shadow: 0 -1px 24px -4px rgba(255, 122, 69, 0.25);
+}
+
+.authenticated-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.brand h1 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 21px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: linear-gradient(120deg, var(--gold-bright), var(--gold) 60%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 24px rgba(212, 175, 55, 0.25);
+}
+
+.brand-tag {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.authenticated-header button {
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-solid);
+  color: var(--text);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 13px;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+
+.authenticated-header button:hover {
+  border-color: var(--border-strong);
+  color: var(--text-h);
+}
+
+.mode-toggle-row {
+  padding-bottom: 16px;
+}
+
+/* Piece 1 (team-review-prep): impossible to miss it's a temporary bypass,
+   without being a full alarm — it's expected state in this mode, not an
+   error. */
+.auth-disabled-banner {
+  align-self: flex-start;
+  margin-bottom: 12px;
+  padding: 5px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--crisis-border);
+  background: var(--crisis-bg);
+  color: var(--crisis-bright);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Glitch-in micro-transition on mode switch (Piece 2) — brief, layered
+   color-bar flicker over the whole shell, tied to the same mode change that
+   already drives the crisis color shift. Reduced-motion users get an
+   instant cut instead (see the media query below). */
+.mode-glitch-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  animation: mode-glitch 380ms steps(1) forwards;
+}
+
+.mode-glitch-overlay::before,
+.mode-glitch-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: screen;
+}
+
+.mode-glitch-overlay::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(78, 168, 222, 0.35) 50%, transparent 100%);
+  animation: mode-glitch-bar 380ms steps(3) forwards;
+}
+
+.mode-glitch-overlay::after {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(212, 175, 55, 0.12) 0px,
+    rgba(212, 175, 55, 0.12) 2px,
+    transparent 2px,
+    transparent 5px
+  );
+  animation: mode-glitch-scan 380ms steps(4) forwards;
+}
+
+@keyframes mode-glitch {
+  0% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes mode-glitch-bar {
+  0% { transform: translateX(-100%); }
+  60% { transform: translateX(100%); }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
+@keyframes mode-glitch-scan {
+  0% { transform: translateY(-6px); opacity: 0.9; }
+  100% { transform: translateY(6px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mode-glitch-overlay,
+  .mode-glitch-overlay::before,
+  .mode-glitch-overlay::after {
+    animation: none;
+    display: none;
+  }
+}
+
+/* Piece 3 — mobile (375-428px baseline). Tighter padding since screen real
+   estate is precious; header shrinks but stays legible; the shell no longer
+   needs a max-width cap at this size. */
+@media (max-width: 640px) {
+  .authenticated-shell {
+    padding: max(12px, env(safe-area-inset-top)) 12px 0;
+    max-width: 100%;
+  }
+
+  .authenticated-header {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+
+  .brand h1 {
+    font-size: 17px;
+  }
+
+  .brand-tag {
+    display: none;
+  }
+
+  .authenticated-header button {
+    min-height: 44px;
+    padding: 0 14px;
+  }
+
+  .mode-toggle-row {
+    padding-bottom: 10px;
+  }
+}

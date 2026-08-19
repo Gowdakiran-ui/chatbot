@@ -1,0 +1,33 @@
+[
+  {
+    "action": "drop_page",
+    "detail": "Dropped pages >80% non-alphabetic (captions/decorative/blank scans)",
+    "pages": [
+      0,
+      1,
+      2,
+      293
+    ]
+  },
+  {
+    "action": "trim_front",
+    "detail": "Trimmed front matter (title/copyright/dedication/TOC)",
+    "pages": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  {
+    "action": "trim_back",
+    "detail": "Trimmed back matter (index/about-author/appendix/ads)",
+    "pages": [
+      292,
+      293,
+      294
+    ]
+  }
+]

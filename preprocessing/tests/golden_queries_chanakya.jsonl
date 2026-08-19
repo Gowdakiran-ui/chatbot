@@ -1,0 +1,25 @@
+{"query": "what did the Arthashastra say about the Superintendent of Horses", "expected_chunk_ids": ["arthashastra_book_ii_chapter_xxx_001"]}
+{"query": "Arthashastra chapter on the Superintendent of Agriculture", "expected_chunk_ids": ["arthashastra_book_ii_005"]}
+{"query": "famine versus pestilence which is worse for a kingdom", "expected_chunk_ids": ["arthashastra_book_viii_chapter_iv_002"]}
+{"query": "what makes someone a real friend in times of danger and sickness", "expected_chunk_ids": ["chanakya_neeti_chapter_6_verse_6_14_001"]}
+{"query": "Chanakya Niti verse about purity, a loyal wife and a benevolent king", "expected_chunk_ids": ["chanakya_neeti_chapter_3_verse_3_35_001"]}
+{"query": "how listening to discourses helps one gain knowledge and righteousness", "expected_chunk_ids": ["chanakya_neeti_chapter_2_verse_2_43_001"]}
+{"query": "the story of the businessman and Mr Chheda who saved his life and business", "expected_chunk_ids": ["7_secrets_of_leadership_segment_160_001"]}
+{"query": "Judge AS Aguiar enquiry into police action against gangsters", "expected_chunk_ids": ["7_secrets_of_leadership_segment_41_001"]}
+{"query": "difference between external discipline imposed by teachers and internal discipline", "expected_chunk_ids": ["7_secrets_of_leadership_segment_178_001"]}
+{"query": "a businessman should plan ten years ahead a politician one generation ahead", "expected_chunk_ids": ["7_secrets_of_leadership_segment_167_001"]}
+{"query": "Manthan training center seating capacity and cost", "expected_chunk_ids": ["7_secrets_of_leadership_segment_168_001"]}
+{"query": "why giving a gift is a powerful way to influence someone per Arthashastra", "expected_chunk_ids": ["corporate_chanakya_segment_45_001"]}
+{"query": "learning from the younger generation about modern technology", "expected_chunk_ids": ["corporate_chanakya_segment_41_001"]}
+{"query": "what is meant by ITB in the box in sales pipeline", "expected_chunk_ids": ["corporate_chanakya_segment_35_001"]}
+{"query": "Chandragupta playing king among a group of boys as a child", "expected_chunk_ids": ["chanakya_info_segment_8_001"]}
+{"query": "Chanakya ordered Shakata-dasa's murder using a spy named Siddharthaka", "expected_chunk_ids": ["chanakya_info_segment_17_001"]}
+{"query": "Chanakya was born with canine teeth as a mark of royalty", "expected_chunk_ids": ["chanakya_info_segment_3_001"]}
+{"query": "Chanakya played by Tarun Khanna in a historical TV series", "expected_chunk_ids": ["chanakya_info_segment_24_001"]}
+{"query": "Chanakya's birthplace Chanaka village Golla vishaya district", "expected_chunk_ids": ["chanakya_info_segment_7_001"]}
+{"query": "king should avoid causes of impoverishment greed and disaffection among people", "expected_chunk_ids": ["arthashastra_book_vii_chapter_v_005"]}
+{"query": "rules for pricing conch shells diamonds pearls and corals", "expected_chunk_ids": ["arthashastra_book_ii_chapter_xxii_002"]}
+{"query": "who is the greatest tell me O Vipra riddle verse", "expected_chunk_ids": ["chanakya_neeti_chapter_9_verse_9_7_001"]}
+{"query": "Arthashastra chapter on treaty formation and impolicy dangers", "expected_chunk_ids": ["arthashastra_book_ix_chapter_v_001"]}
+{"query": "what does ill luck mean even with world class systems installed", "expected_chunk_ids": ["7_secrets_of_leadership_segment_116_001"]}
+{"query": "mentor said I do not understand anything in the Arthashastra even though trying my best", "expected_chunk_ids": ["corporate_chanakya_segment_3_001"]}

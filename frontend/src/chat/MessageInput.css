@@ -1,0 +1,137 @@
+.message-input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rate-limit-banner {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--crisis-border);
+  background: var(--crisis-bg);
+  color: var(--crisis-bright);
+  font-size: 12.5px;
+  font-family: var(--mono);
+}
+
+.message-input-field {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 8px 8px 8px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-solid);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.message-input-field:focus-within {
+  border-color: var(--gold);
+  box-shadow: var(--glow-gold);
+}
+
+.message-input-field.is-over-limit {
+  border-color: var(--danger);
+  box-shadow: 0 0 14px rgba(255, 77, 109, 0.3);
+}
+
+.message-input-field textarea {
+  flex: 1;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-h);
+  font-size: 14.5px;
+  line-height: 1.5;
+  max-height: 160px;
+  min-height: 24px;
+  padding: 6px 0;
+  field-sizing: content;
+}
+
+.message-input-field textarea::placeholder {
+  color: var(--text-dim);
+}
+
+.message-input-field textarea:disabled {
+  opacity: 0.5;
+}
+
+.message-input-send {
+  flex-shrink: 0;
+  padding: 9px 20px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+  color: var(--gold-contrast);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 14.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: box-shadow 150ms ease, transform 100ms ease, opacity 150ms ease;
+}
+
+/* The send button is a genuine focal point (task.md) — a light glow when
+   it's actually ready to fire, a stronger one on hover, none at all when
+   disabled. */
+.message-input-send:not(:disabled) {
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.25);
+}
+
+.message-input-send:not(:disabled):hover {
+  box-shadow: var(--glow-gold);
+  transform: translateY(-1px);
+}
+
+.message-input-send:disabled {
+  opacity: 0.35;
+  background: var(--surface-raised);
+  color: var(--text-dim);
+}
+
+.message-input-meta {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 4px;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+}
+
+.message-input-counter {
+  color: var(--gold);
+}
+
+.message-input-counter.is-over {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/* Piece 3 — mobile: anchored to the bottom of the viewport (see index.css's
+   #root height fix — .chat-history is the only scrolling region, so this
+   never gets pushed off-screen or covered by the keyboard), safe-area-aware
+   so it clears the iOS home-bar, real 44px touch targets. */
+@media (max-width: 640px) {
+  .message-input {
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+
+  .message-input-field {
+    border-radius: 14px;
+  }
+
+  .message-input-send {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0 18px;
+  }
+
+  .message-input-field textarea {
+    font-size: 16px; /* prevents iOS Safari's automatic zoom-on-focus below 16px */
+  }
+}

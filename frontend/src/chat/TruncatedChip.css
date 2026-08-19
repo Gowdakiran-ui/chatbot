@@ -1,0 +1,18 @@
+.truncated-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--crisis-border);
+  background: var(--crisis-bg);
+  color: var(--crisis-bright);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+}
+
+.truncated-chip-icon {
+  font-size: 11px;
+}

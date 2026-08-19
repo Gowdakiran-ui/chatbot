@@ -1,0 +1,227 @@
+.message {
+  display: flex;
+  margin-bottom: 14px;
+}
+
+.message-user {
+  justify-content: flex-end;
+}
+
+.message-assistant {
+  justify-content: flex-start;
+}
+
+.message-bubble {
+  max-width: 78%;
+  padding: 11px 15px;
+  border-radius: 12px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  word-break: break-word;
+  transition: box-shadow 200ms ease;
+}
+
+.message-bubble-user {
+  background: linear-gradient(135deg, rgba(78, 168, 222, 0.22), rgba(78, 168, 222, 0.08));
+  border: 1px solid var(--border-blue);
+  color: var(--text-h);
+  border-bottom-right-radius: 3px;
+  white-space: pre-wrap;
+}
+
+.message-bubble-assistant {
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  color: var(--text);
+  border-bottom-left-radius: 3px;
+  min-width: 64px;
+}
+
+/* Depth on the newest message only (task.md: "layered glow ... on the most
+   recent message") — everything older settles back to flat once superseded,
+   so the glow always points at what's actually current. */
+.message-bubble-assistant.is-latest {
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.15), var(--glow-gold);
+}
+.message-bubble-refusal.is-latest {
+  box-shadow: 0 0 0 1px rgba(78, 168, 222, 0.15), var(--glow-blue);
+}
+.message-bubble-assistant.status-error.is-latest {
+  box-shadow: 0 0 0 1px rgba(255, 77, 109, 0.15), var(--glow-danger);
+}
+
+/* Error gets a visibly different shape too, not just a color swap — sharper
+   corners read as "alert" against the rounded calm of every other state. */
+.message-bubble-assistant.status-error {
+  border-left-color: var(--danger);
+  border-radius: 4px;
+  border-bottom-left-radius: 3px;
+}
+
+.message-text {
+  color: var(--text-h);
+}
+
+/* Refusal — a trust feature, not an error: calm blue framing, distinct from
+   both the normal gold-bordered answer bubble and the sharp-cornered red
+   error panel. */
+.message-bubble-refusal {
+  background: rgba(78, 168, 222, 0.06);
+  border: 1px solid var(--border-blue);
+  border-left: 3px solid var(--blue);
+  border-radius: 12px;
+  border-bottom-left-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  transition: box-shadow 200ms ease;
+}
+
+.message-bubble-refusal .message-text {
+  white-space: pre-wrap;
+  color: var(--text-h);
+}
+
+/* --- Markdown body (Piece 4: safe rendering, never dangerouslySetInnerHTML — see Message.jsx) --- */
+.markdown-body {
+  display: block;
+}
+
+.markdown-body p {
+  margin: 0 0 10px;
+}
+.markdown-body p:last-child {
+  margin-bottom: 0;
+  display: inline;
+}
+
+.markdown-body strong {
+  color: var(--text-h);
+  font-weight: 700;
+}
+
+.markdown-body em {
+  color: var(--gold-bright);
+  font-style: italic;
+}
+
+.markdown-body ul, .markdown-body ol {
+  margin: 0 0 10px;
+  padding-left: 22px;
+}
+.markdown-body li {
+  margin-bottom: 4px;
+}
+.markdown-body li:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+  font-family: var(--font-heading);
+  color: var(--gold-bright);
+  font-size: 1.1em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 0 0 8px;
+}
+
+.markdown-body code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--gold-bright);
+}
+
+.markdown-body pre {
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  margin: 0 0 10px;
+}
+.markdown-body pre code {
+  border: none;
+  padding: 0;
+  background: none;
+}
+
+.markdown-body blockquote {
+  margin: 0 0 10px;
+  padding-left: 12px;
+  border-left: 2px solid var(--border-strong);
+  color: var(--text-dim);
+}
+
+.markdown-body table {
+  border-collapse: collapse;
+  margin: 0 0 10px;
+  font-size: 0.92em;
+  width: 100%;
+}
+.markdown-body th, .markdown-body td {
+  border: 1px solid var(--border);
+  padding: 5px 9px;
+  text-align: left;
+}
+.markdown-body th {
+  color: var(--text-h);
+  background: var(--surface-solid);
+}
+
+.markdown-body a {
+  color: var(--blue-bright);
+}
+
+.stream-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 14px;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--gold-bright);
+  box-shadow: 0 0 6px rgba(212, 175, 55, 0.7);
+  animation: cursor-blink 0.9s steps(1) infinite;
+}
+
+@keyframes cursor-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.message-error-note {
+  margin-top: 4px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* A wide markdown table is the one thing that can force horizontal
+   overflow — contained to its own scroll box rather than ever widening the
+   page (task.md: "no horizontal scroll anywhere"). */
+.markdown-body table {
+  display: block;
+  overflow-x: auto;
+}
+
+/* Piece 3 — mobile: bubbles use the full available width instead of
+   reserving ~22% for empty space that isn't buying anything on a narrow
+   screen. */
+@media (max-width: 640px) {
+  .message-bubble {
+    max-width: 92%;
+    font-size: 15px;
+    padding: 10px 13px;
+  }
+}

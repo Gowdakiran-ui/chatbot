@@ -1,0 +1,35 @@
+.message-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 8px;
+  padding: 2px 9px 2px 7px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.message-badge-icon {
+  font-size: 11px;
+}
+
+.badge-grounded {
+  color: var(--gold-bright);
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.badge-refusal {
+  color: var(--blue-bright);
+  background: rgba(78, 168, 222, 0.12);
+  border: 1px solid rgba(78, 168, 222, 0.3);
+}
+
+.badge-error {
+  color: var(--danger);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+}

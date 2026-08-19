@@ -1,0 +1,160 @@
+/* Cyberpunk dark theme — deep navy base, gold as the primary accent (wisdom /
+   chanakya mode), electric blue as the secondary structural accent, neon
+   amber-red reserved for crisis mode. Deliberately a single committed dark
+   aesthetic, not a light/dark toggle — a "futuristic HUD" look doesn't have a
+   light-mode equivalent worth building. */
+:root {
+  --bg: #060912;
+  --bg-2: #0a0f1e;
+  --surface: rgba(14, 20, 38, 0.72);
+  --surface-solid: #0d1426;
+  --surface-raised: #121a34;
+  --border: rgba(201, 168, 76, 0.22);
+  --border-strong: rgba(201, 168, 76, 0.5);
+  --border-blue: rgba(86, 166, 255, 0.28);
+
+  --text: #a9b7d8;
+  --text-dim: #5b6785;
+  --text-h: #f2e6c4;
+
+  --gold: #d4af37;
+  --gold-bright: #f6d878;
+  --gold-contrast: #0a0e1a;
+
+  --blue: #4ea8de;
+  --blue-bright: #7cc6ff;
+
+  --crisis: #ff7a45;
+  --crisis-bright: #ffa06b;
+  --crisis-bg: rgba(255, 122, 69, 0.08);
+  --crisis-border: rgba(255, 122, 69, 0.35);
+
+  --danger: #ff4d6d;
+  --danger-bg: rgba(255, 77, 109, 0.1);
+  --danger-border: rgba(255, 77, 109, 0.35);
+
+  /* Reserved for genuine focal points only (send button, active mode,
+     newest message) — task.md's own note: if everything glows, nothing
+     reads as important. */
+  --glow-gold: 0 0 22px rgba(212, 175, 55, 0.5), 0 0 4px rgba(212, 175, 55, 0.6);
+  --glow-blue: 0 0 22px rgba(78, 168, 222, 0.45), 0 0 4px rgba(78, 168, 222, 0.55);
+  --glow-crisis: 0 0 22px rgba(255, 122, 69, 0.45), 0 0 4px rgba(255, 122, 69, 0.55);
+  --glow-danger: 0 0 22px rgba(255, 77, 109, 0.4), 0 0 4px rgba(255, 77, 109, 0.5);
+
+  /* Typography hierarchy — three distinct families, each with one job:
+     display (angular, tech-readout) for the brand title only; a condensed
+     technical sans for headers/labels/mode names, legible at small sizes
+     where display would fight itself; body stays a clean system sans so
+     long generated answers stay easy to read; mono is reserved for HUD-style
+     metadata (source chip ids, latency/token debug readouts, timestamps). */
+  --font-display: 'Orbitron', system-ui, sans-serif;
+  --font-heading: 'Rajdhani', system-ui, sans-serif;
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'Share Tech Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  font: 16px/1.5 var(--sans);
+  color-scheme: dark;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(78, 168, 222, 0.14), transparent 60%),
+    radial-gradient(ellipse 700px 600px at 100% 10%, rgba(212, 175, 55, 0.1), transparent 55%),
+    var(--bg);
+}
+
+/* Faint HUD grid with a slow drift — motion used deliberately (task.md),
+   not everywhere: this is the one always-on ambient animation, kept slow
+   (60s/tile) and low-contrast enough to read as atmosphere, not distraction. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -42px;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(78, 168, 222, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(78, 168, 222, 0.05) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 0%, transparent 75%);
+  animation: grid-drift 60s linear infinite;
+}
+
+@keyframes grid-drift {
+  from { background-position: 0 0; }
+  to { background-position: 42px 42px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+  /* Fixed, not min-height: the whole app is viewport-locked so
+     .chat-history is the one scrolling region and the message input stays
+     pinned at the bottom — dvh (not svh) so it tracks the *actual* visual
+     viewport as a mobile on-screen keyboard opens/closes, rather than a
+     static "smallest possible" value that could leave the input hidden
+     behind the keyboard. */
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+input, textarea {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(212, 175, 55, 0.35);
+  color: var(--text-h);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 6px;
+}
