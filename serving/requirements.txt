@@ -1,0 +1,14 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+python-dotenv==1.0.1
+qdrant-client==1.19.0
+requests==2.31.0
+
+# Local embedding models used by db/embedding.py (dense) and
+# db/sparse_embedding.py (sparse, for hybrid retrieval) — required at chat-
+# serving time, not just ingestion time.
+sentence-transformers==5.7.0
+torch==2.5.1
+fastembed==0.8.0
+einops==0.8.0

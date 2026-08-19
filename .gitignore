@@ -42,6 +42,13 @@ db/
 *.sqlite3
 *.db
 
+# --- Ingestion-only source material (copyrighted books + derived chunks) ---
+# Retrieval hits Qdrant Cloud directly at runtime; teammates running the
+# chatbot never need these locally. Ingestion-time only, see SETUP.md.
+data/raw/*.pdf
+data/processed/*.jsonl
+data/processed/**/*.jsonl
+
 # --- OS / editor ---
 .DS_Store
 Thumbs.db
