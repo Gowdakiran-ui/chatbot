@@ -31,6 +31,7 @@ from qdrant_client import QdrantClient
 from db.crisis_qdrant_client import get_client as get_crisis_client
 from db.parent_expansion import expand_chanakya_chunk, expand_crisis_chunk
 from db.qdrant_client import get_client as get_chanakya_client
+from serving.sources import SourceInfoFn, chanakya_source_info, crisis_source_info, generic_source_info
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PROMPTS_DIR = PROJECT_ROOT / "prompts"
@@ -68,6 +69,8 @@ class ModeConfig(BaseModel):
     # would be wasted cost with no quality benefit (the eval never needed more
     # than ~500 output tokens there).
     max_tokens: int
+    # How a retrieved chunk is described to the client (label + metadata chips) in the `final` SSE event.
+    source_info_fn: SourceInfoFn = generic_source_info
 
 
 MODE_CONFIG: dict[Mode, ModeConfig] = {
@@ -80,6 +83,7 @@ MODE_CONFIG: dict[Mode, ModeConfig] = {
         get_client=get_chanakya_client,
         requires_disclaimer=False,
         max_tokens=800,
+        source_info_fn=chanakya_source_info,
     ),
     Mode.CRISIS: ModeConfig(
         collection_alias="crisis_kb",
@@ -94,6 +98,7 @@ MODE_CONFIG: dict[Mode, ModeConfig] = {
         get_client=get_crisis_client,
         requires_disclaimer=True,
         max_tokens=1400,
+        source_info_fn=crisis_source_info,
     ),
 }
 

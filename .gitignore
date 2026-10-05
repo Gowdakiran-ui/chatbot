@@ -60,3 +60,7 @@ Thumbs.db
 # --- Logs ---
 *.log
 logs/
+
+# --- Internal planning / audit notes (never committed) ---
+task.md
+docs-internal/

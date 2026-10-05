@@ -59,6 +59,7 @@ from serving.prompt import build_prompt
 from serving.rate_limit import GenerationConcurrencyLimiter, InMemoryTokenBucketLimiter
 from serving.retrieval import RetrievalResult, retrieve_context
 from serving.secrets import redact_secrets
+from serving.sources import build_sources
 
 logger = logging.getLogger("serving.app")
 
@@ -404,6 +405,7 @@ def _stream_generation(
                 "top_score": result.top_score,
                 "top_dense_score": result.top_dense_score,
                 "cited_chunk_ids": cited_chunk_ids,
+                "sources": [ref.model_dump() for ref in build_sources(result.chunks, config.source_info_fn)],
                 "conversation_id": request.conversation_id,
             }
         )

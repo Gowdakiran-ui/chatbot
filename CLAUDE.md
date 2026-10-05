@@ -39,6 +39,14 @@ Two features, one app. Shared plumbing, separate knowledge bases and system prom
 - Don't hardcode the LLM/embedding provider — wrap both behind a thin interface so swapping models later (once the company decides) is a config change, not a rewrite.
 - Don't skip metadata tagging during ingestion to save time now — retrofitting tags onto thousands of chunks later is far more expensive.
 
+## Standing Rules (apply to every task)
+
+1. **Ask, don't assume.** If scope or a requirement is ambiguous, stop and ask. Batch questions into one message; never silently pick an interpretation.
+2. **Never touch git.** Don't stage, commit, push, branch, stash or reset. At the end of a task, print the exact git commands for the user to run.
+3. **Keep planning files out of the repo.** `task.md`, audit/inventory notes and scratch docs are gitignored (`task.md`, `docs-internal/`). Only code and user-facing docs (README) belong in the repo.
+4. **Keep dependencies in sync.** Whenever a Python dependency is added, removed or changed, update `serving/requirements.txt` to match what the code imports; do the same for `frontend/package.json`. Verify nothing is missing or stale before finishing.
+5. **UI forensics first.** Before building or changing UI to match a reference, inventory what the live rendered reference does (computed styles per state), then diff the result against that inventory.
+
 ## Current Status
 - Tech stack: **not finalized** (org decision pending) — write provider-agnostic code.
 - Content: sourcing Arthashastra/Chanakya Niti (public domain) for Chanakya KB; internal case history + researched public cases for crisis KB. Both still in progress.

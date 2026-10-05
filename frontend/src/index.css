@@ -1,160 +1,488 @@
-/* Cyberpunk dark theme — deep navy base, gold as the primary accent (wisdom /
-   chanakya mode), electric blue as the secondary structural accent, neon
-   amber-red reserved for crisis mode. Deliberately a single committed dark
-   aesthetic, not a light/dark toggle — a "futuristic HUD" look doesn't have a
-   light-mode equivalent worth building. */
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/newsreader';
+@import '@fontsource-variable/jetbrains-mono';
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------ tokens */
 :root {
-  --bg: #060912;
-  --bg-2: #0a0f1e;
-  --surface: rgba(14, 20, 38, 0.72);
-  --surface-solid: #0d1426;
-  --surface-raised: #121a34;
-  --border: rgba(201, 168, 76, 0.22);
-  --border-strong: rgba(201, 168, 76, 0.5);
-  --border-blue: rgba(86, 166, 255, 0.28);
-
-  --text: #a9b7d8;
-  --text-dim: #5b6785;
-  --text-h: #f2e6c4;
-
-  --gold: #d4af37;
-  --gold-bright: #f6d878;
-  --gold-contrast: #0a0e1a;
-
-  --blue: #4ea8de;
-  --blue-bright: #7cc6ff;
-
-  --crisis: #ff7a45;
-  --crisis-bright: #ffa06b;
-  --crisis-bg: rgba(255, 122, 69, 0.08);
-  --crisis-border: rgba(255, 122, 69, 0.35);
-
-  --danger: #ff4d6d;
-  --danger-bg: rgba(255, 77, 109, 0.1);
-  --danger-border: rgba(255, 77, 109, 0.35);
-
-  /* Reserved for genuine focal points only (send button, active mode,
-     newest message) — task.md's own note: if everything glows, nothing
-     reads as important. */
-  --glow-gold: 0 0 22px rgba(212, 175, 55, 0.5), 0 0 4px rgba(212, 175, 55, 0.6);
-  --glow-blue: 0 0 22px rgba(78, 168, 222, 0.45), 0 0 4px rgba(78, 168, 222, 0.55);
-  --glow-crisis: 0 0 22px rgba(255, 122, 69, 0.45), 0 0 4px rgba(255, 122, 69, 0.55);
-  --glow-danger: 0 0 22px rgba(255, 77, 109, 0.4), 0 0 4px rgba(255, 77, 109, 0.5);
-
-  /* Typography hierarchy — three distinct families, each with one job:
-     display (angular, tech-readout) for the brand title only; a condensed
-     technical sans for headers/labels/mode names, legible at small sizes
-     where display would fight itself; body stays a clean system sans so
-     long generated answers stay easy to read; mono is reserved for HUD-style
-     metadata (source chip ids, latency/token debug readouts, timestamps). */
-  --font-display: 'Orbitron', system-ui, sans-serif;
-  --font-heading: 'Rajdhani', system-ui, sans-serif;
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: 'Share Tech Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
-
-  font: 16px/1.5 var(--sans);
+  --bg: #faf9f5;
+  --surface: #f0eee6;
+  --elevated: #ffffff;
+  --text: #141413;
+  --text-muted: #73726c;
+  --border: #e4e1d6;
+  --accent: #c96442;
+  --accent-fg: #ffffff;
+  --danger: #b4413a;
+  --user-bubble: #efece1;
+  --code-bg: #f4f2ea;
+  --shadow: 0 1px 2px rgb(20 20 19 / 0.04), 0 4px 16px rgb(20 20 19 / 0.06);
+  --shadow-lg: 0 8px 40px rgb(20 20 19 / 0.14);
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  --bg: #262624;
+  --surface: #1f1e1d;
+  --elevated: #30302e;
+  --text: #faf9f5;
+  --text-muted: #a6a39a;
+  --border: #3d3d3a;
+  --accent: #d97757;
+  --accent-fg: #1b1a19;
+  --danger: #e27d73;
+  --user-bubble: #34332f;
+  --code-bg: #1f1e1d;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.2), 0 4px 16px rgb(0 0 0 / 0.25);
+  --shadow-lg: 0 8px 40px rgb(0 0 0 / 0.5);
   color-scheme: dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-* {
-  box-sizing: border-box;
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-fg: var(--text);
+  --color-muted: var(--text-muted);
+  --color-line: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-danger: var(--danger);
+  --color-bubble: var(--user-bubble);
+  --color-code: var(--code-bg);
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'Newsreader Variable', 'Source Serif 4', ui-serif, Georgia, serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', Consolas, monospace;
+  --radius-card: 12px;
+  --radius-composer: 24px;
+  --shadow-soft: var(--shadow);
+  --shadow-pop: var(--shadow-lg);
 }
 
+/* -------------------------------------------------------------------- base */
+html,
+body,
+#root {
+  height: 100%;
+}
 body {
   margin: 0;
-  min-height: 100svh;
-  background:
-    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(78, 168, 222, 0.14), transparent 60%),
-    radial-gradient(ellipse 700px 600px at 100% 10%, rgba(212, 175, 55, 0.1), transparent 55%),
-    var(--bg);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-wrap: anywhere;
 }
-
-/* Faint HUD grid with a slow drift — motion used deliberately (task.md),
-   not everywhere: this is the one always-on ambient animation, kept slow
-   (60s/tile) and low-contrast enough to read as atmosphere, not distraction. */
-body::before {
-  content: '';
-  position: fixed;
-  inset: -42px;
-  pointer-events: none;
-  z-index: 0;
-  background-image:
-    linear-gradient(rgba(78, 168, 222, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(78, 168, 222, 0.05) 1px, transparent 1px);
-  background-size: 42px 42px;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 0%, transparent 75%);
-  animation: grid-drift 60s linear infinite;
+::selection {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
 }
-
-@keyframes grid-drift {
-  from { background-position: 0 0; }
-  to { background-position: 42px 42px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body::before {
-    animation: none;
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 }
-
-#root {
-  position: relative;
-  z-index: 1;
-  /* Fixed, not min-height: the whole app is viewport-locked so
-     .chat-history is the one scrolling region and the message input stays
-     pinned at the bottom — dvh (not svh) so it tracks the *actual* visual
-     viewport as a mobile on-screen keyboard opens/closes, rather than a
-     static "smallest possible" value that could leave the input hidden
-     behind the keyboard. */
-  height: 100dvh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-h1, h2, h3 {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  color: var(--text-h);
-  margin: 0;
-}
-
-p {
-  margin: 0;
-}
-
 button {
-  font: inherit;
   cursor: pointer;
 }
-
 button:disabled {
   cursor: not-allowed;
 }
-
-input, textarea {
-  font: inherit;
+/* smooth theme switch (class is added briefly by the theme hook) */
+.theme-transition,
+.theme-transition * {
+  transition:
+    background-color 220ms ease,
+    color 220ms ease,
+    border-color 220ms ease !important;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--text-muted) 40%, transparent) transparent;
 }
 
-::selection {
-  background: rgba(212, 175, 55, 0.35);
-  color: var(--text-h);
+/* --------------------------------------------------------------- animation */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes slide-in-right {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(4px);
+  }
+}
+.anim-rise {
+  animation: rise 180ms ease-out both;
+}
+.anim-fade {
+  animation: fade 150ms ease-out both;
+}
+.anim-pop {
+  animation: pop 150ms ease-out both;
+}
+.anim-slide-right {
+  animation: slide-in-right 200ms ease-out both;
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+.shimmer {
+  background: linear-gradient(90deg, var(--text-muted) 30%, var(--text) 50%, var(--text-muted) 70%) 0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 1.8s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .shimmer {
+    color: var(--text-muted);
+    background: none;
+  }
 }
 
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+/* ------------------------------------------------------------ markdown body */
+.md {
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+.md > :first-child {
+  margin-top: 0;
 }
-::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
+.md > :last-child {
+  margin-bottom: 0;
+}
+.md p {
+  margin: 0 0 0.9em;
+  white-space: pre-line; /* keep single line breaks the model wrote */
+}
+.md h1,
+.md h2,
+.md h3,
+.md h4 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1.5em 0 0.5em;
+  letter-spacing: -0.01em;
+}
+.md h1 {
+  font-size: 1.6em;
+}
+.md h2 {
+  font-size: 1.35em;
+}
+.md h3 {
+  font-size: 1.15em;
+}
+.md h4 {
+  font-size: 1em;
+}
+.md ul,
+.md ol {
+  margin: 0 0 0.9em;
+  padding-left: 1.5em;
+}
+.md ul {
+  list-style: disc;
+}
+.md ol {
+  list-style: decimal;
+}
+.md li {
+  margin: 0.25em 0;
+  padding-left: 0.2em;
+}
+.md li > p {
+  margin: 0.3em 0;
+}
+.md li::marker {
+  color: var(--text-muted);
+}
+.md a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms;
+}
+.md a:hover {
+  text-decoration-color: var(--accent);
+}
+.md blockquote {
+  margin: 0 0 0.9em;
+  padding: 0.1em 0 0.1em 1em;
+  border-left: 3px solid var(--border);
+  color: var(--text-muted);
+}
+.md hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 1.5em 0;
+}
+.md :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  padding: 0.12em 0.36em;
   border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+.md strong {
+  font-weight: 600;
+}
+.md img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+.md-table {
+  overflow-x: auto;
+  margin: 0 0 0.9em;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.md-table table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.93em;
+}
+.md-table th,
+.md-table td {
+  padding: 0.5em 0.85em;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: normal;
+  min-width: 6em;
+}
+.md-table th {
+  background: var(--surface);
+  font-weight: 600;
+}
+.md-table tr:last-child td {
+  border-bottom: 0;
+}
+
+/* streaming caret: attaches to the last inline-capable block */
+.streaming .md > p:last-child::after,
+.streaming .md > h1:last-child::after,
+.streaming .md > h2:last-child::after,
+.streaming .md > h3:last-child::after,
+.streaming .md > blockquote:last-child > p:last-child::after,
+.streaming .md > ul:last-child > li:last-child::after,
+.streaming .md > ol:last-child > li:last-child::after,
+.streaming.md.empty::after {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 3px;
+  vertical-align: text-bottom;
+  background: var(--accent);
+  border-radius: 1px;
+  animation: blink 1s steps(2, start) infinite;
+}
+
+/* -------------------------------------------------------------- code blocks */
+.codeblock {
+  margin: 0 0 0.9em;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--code-bg);
+  overflow: hidden;
+}
+.codeblock pre {
+  margin: 0;
+  padding: 0.9em 1em;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  line-height: 1.6;
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
+  tab-size: 2;
+}
+.codeblock code {
+  font-family: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  white-space: inherit;
+}
+.hljs-comment,
+.hljs-quote {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-type {
+  color: #b5462a;
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-meta .hljs-string {
+  color: #3f7d4e;
+}
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet {
+  color: #a1620b;
+}
+.hljs-title,
+.hljs-title.function_,
+.hljs-section,
+.hljs-name {
+  color: #3f62b3;
+}
+.hljs-built_in,
+.hljs-class .hljs-title,
+.hljs-title.class_ {
+  color: #8a4fa3;
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-property {
+  color: #2f7f8f;
+}
+.hljs-deletion {
+  color: var(--danger);
+}
+.hljs-meta {
+  color: var(--text-muted);
+}
+.hljs-emphasis {
+  font-style: italic;
+}
+.hljs-strong {
+  font-weight: 700;
+}
+:root[data-theme='dark'] .hljs-keyword,
+:root[data-theme='dark'] .hljs-selector-tag,
+:root[data-theme='dark'] .hljs-literal,
+:root[data-theme='dark'] .hljs-type {
+  color: #f0866a;
+}
+:root[data-theme='dark'] .hljs-string,
+:root[data-theme='dark'] .hljs-regexp,
+:root[data-theme='dark'] .hljs-addition {
+  color: #8fc9a0;
+}
+:root[data-theme='dark'] .hljs-number,
+:root[data-theme='dark'] .hljs-symbol,
+:root[data-theme='dark'] .hljs-bullet {
+  color: #e5b567;
+}
+:root[data-theme='dark'] .hljs-title,
+:root[data-theme='dark'] .hljs-title.function_,
+:root[data-theme='dark'] .hljs-section,
+:root[data-theme='dark'] .hljs-name {
+  color: #86a8ee;
+}
+:root[data-theme='dark'] .hljs-built_in,
+:root[data-theme='dark'] .hljs-title.class_ {
+  color: #c79be0;
+}
+:root[data-theme='dark'] .hljs-attr,
+:root[data-theme='dark'] .hljs-attribute,
+:root[data-theme='dark'] .hljs-variable,
+:root[data-theme='dark'] .hljs-property {
+  color: #7fcfdf;
+}
+
+/* ------------------------------------------------------------ small helpers */
+.row {
+  transition: background-color 150ms ease-out;
+}
+.row:hover,
+.row[data-active='true'] {
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+.md a.cite {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin: 0 1px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  vertical-align: 0.12em;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  transition:
+    color 150ms,
+    border-color 150ms,
+    background-color 150ms;
+}
+.md a.cite:hover {
+  color: var(--accent-fg);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms ease-out;
+}
+.reveal[data-open='true'] {
+  grid-template-rows: 1fr;
+}
+.reveal > div {
+  overflow: hidden;
+  min-height: 0;
 }

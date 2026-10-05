@@ -192,6 +192,8 @@ def test_chat_generation_path_streams_tokens_and_cites_sources(tmp_path, monkeyp
     assert final_event["type"] == "final"
     assert final_event["refused"] is False
     assert final_event["cited_chunk_ids"] == ["doc_a"]
+    assert final_event["sources"] == [{"id": "doc_a", "label": "x", "snippet": "alpha", "metadata": {}}]
+    assert "score" not in str(final_event["sources"]).lower()
     assert final_event["conversation_id"] == "abc"
     fake_provider.generate.assert_called_once()
     app_mod.app.dependency_overrides.clear()
