@@ -12,3 +12,10 @@ sentence-transformers==5.7.0
 torch==2.5.1
 fastembed==0.8.0
 einops==0.8.0
+
+# Pinned because nomic-embed-text-v1.5's remote model code breaks on newer transformers
+# (transformers 5.18 raised AttributeError: get_extended_attention_mask). These are the versions
+# the embedding path was verified with, locally and on the server.
+transformers==5.15.0
+tokenizers==0.22.2
+huggingface-hub==1.28.0
