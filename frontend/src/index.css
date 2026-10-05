@@ -308,13 +308,13 @@ button:disabled {
 }
 
 /* streaming caret: attaches to the last inline-capable block */
-.streaming .md > p:last-child::after,
-.streaming .md > h1:last-child::after,
-.streaming .md > h2:last-child::after,
-.streaming .md > h3:last-child::after,
-.streaming .md > blockquote:last-child > p:last-child::after,
-.streaming .md > ul:last-child > li:last-child::after,
-.streaming .md > ol:last-child > li:last-child::after,
+.md.streaming > p:last-child::after,
+.md.streaming > h1:last-child::after,
+.md.streaming > h2:last-child::after,
+.md.streaming > h3:last-child::after,
+.md.streaming > blockquote:last-child > p:last-child::after,
+.md.streaming > ul:last-child > li:last-child::after,
+.md.streaming > ol:last-child > li:last-child::after,
 .streaming.md.empty::after {
   content: '';
   display: inline-block;
