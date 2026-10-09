@@ -115,9 +115,41 @@ def extract_short_status(raw: str) -> str:
     return _first_line(raw)
 
 
+def _split_top_level(raw: str, sep: str = "/") -> list[str]:
+    """Split on `sep` only outside parentheses, so an explanation like "(coordinating carrier/retailer ...)" stays whole."""
+    depth, current, parts = 0, [], []
+    for ch in raw.replace("\n", " "):
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth = max(0, depth - 1)
+        if ch == sep and depth == 0:
+            parts.append("".join(current))
+            current = []
+        else:
+            current.append(ch)
+    parts.append("".join(current))
+    return parts
+
+
+_TAG_END_RE = re.compile(r"\s*(?:\(|\s[—–-]\s|:)")
+
+
 def parse_onlyne_relevance(raw: str) -> list[str]:
-    parts = [p.strip() for p in raw.replace("\n", " ").split("/")]
-    return [p for p in parts if p]
+    """Clean tag labels only ("ORM", "Crisis Comms", "Legal Takedown"); the explanatory text goes to onlyne_note."""
+    tags = []
+    for part in _split_top_level(raw):
+        part = part.strip()
+        if not part:
+            continue
+        end = _TAG_END_RE.search(part)
+        tags.append((part[: end.start()] if end else part).strip())
+    return [t for t in tags if t]
+
+
+def clean_key_sources(raw: str) -> str:
+    """Drop the '---' case separator the markdown leaves at the end of the last field."""
+    return re.sub(r"\s*-{3,}\s*$", "", raw).strip()
 
 
 # --- Case assembly ---------------------------------------------------------------------
@@ -166,7 +198,8 @@ def build_case(
         best_practice=fields["best_practice"],
         estimated_impact=fields["estimated_impact"],
         onlyne_relevance=parse_onlyne_relevance(fields["onlyne_relevance"]),
-        key_sources=fields["key_sources"],
+        key_sources=clean_key_sources(fields["key_sources"]),
+        onlyne_note=" ".join(fields["onlyne_relevance"].split()),
     )
     return case, []
 

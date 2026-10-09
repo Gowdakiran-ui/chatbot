@@ -33,6 +33,7 @@ class ParsedCase(BaseModel):
     estimated_impact: str
     onlyne_relevance: list[str]
     key_sources: str
+    onlyne_note: str = ""  # the full ORM-relevance commentary; onlyne_relevance holds the clean tags
 
 
 class ParseError(BaseModel):
@@ -59,6 +60,9 @@ class CrisisChunkMetadata(BaseModel):
     resolution_status: str
     onlyne_relevance: list[str]
     chunk_type: CrisisChunkType
+    response_type: str = ""
+    onlyne_note: str = ""
+    key_sources: str = ""  # the case file's own citation list, for source display and verification
 
     def to_dict(self) -> dict:
         d = self.model_dump()

@@ -109,10 +109,9 @@ def test_budget_cap_drops_lower_ranked_chunks_that_dont_fit(tmp_path, client, mo
         {"id": "doc_zzz_unrelated", "text": "bbbb " * 200, "source": "corporate_chanakya", "chunk_type": "prose", "parent_id": None},
     ]
     _build(client, tmp_path, rows)
-    monkeypatch.setattr(retrieval_mod, "MAX_CONTEXT_CHARS", 100)
 
     config = _fake_config()
-    config = config.model_copy(update={"get_client": lambda: client, "top_k": 2})
+    config = config.model_copy(update={"get_client": lambda: client, "top_k": 2, "max_context_chars": 100})
 
     result = retrieval_mod.retrieve_context("aaaa", config, Mode.CHANAKYA)
 

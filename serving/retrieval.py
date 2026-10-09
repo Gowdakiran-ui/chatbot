@@ -129,7 +129,7 @@ def retrieve_context(
             expanded_text = config.expand_fn(client, config.collection_alias, group_hits[0].payload)
         if expanded_text in seen_texts:
             continue  # another, higher- or equal-ranked hit already expanded to this same parent
-        if chunks and budget_used + len(expanded_text) > MAX_CONTEXT_CHARS:
+        if chunks and budget_used + len(expanded_text) > config.max_context_chars:
             continue  # keep checking lower-ranked hits — a later, shorter one might still fit
         seen_texts.add(expanded_text)
         chunks.append(

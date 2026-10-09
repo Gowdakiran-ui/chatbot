@@ -58,7 +58,7 @@ def trace_query(query: str, mode: Mode, clients: dict) -> dict:
 
 def case_of(chunk_id: str) -> str:
     """crisis ids are <case_id>_<chunk_type>; chanakya ids are returned unchanged."""
-    for suffix in ("_summary", "_trigger_event", "_went_right", "_went_wrong", "_best_practice"):
+    for suffix in ("_summary", "_trigger_event", "_went_right", "_went_wrong", "_best_practice", "_response_assessment", "_legal_framework"):
         if chunk_id.endswith(suffix):
             return chunk_id[: -len(suffix)]
     return chunk_id

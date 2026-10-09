@@ -6,6 +6,7 @@ from crisis_parse import (
     extract_year,
     parse_batch_file,
     parse_case_block,
+    clean_key_sources,
     parse_onlyne_relevance,
     split_cases,
 )
@@ -148,7 +149,21 @@ def test_extract_short_status_takes_first_nonempty_line():
 
 def test_parse_onlyne_relevance_splits_on_slash():
     tags = parse_onlyne_relevance("ORM / Crisis Comms / Legal Takedown (retrospective note)")
-    assert tags == ["ORM", "Crisis Comms", "Legal Takedown (retrospective note)"]
+    assert tags == ["ORM", "Crisis Comms", "Legal Takedown"]
+
+
+def test_parse_onlyne_relevance_keeps_slashes_and_commas_inside_parentheses_out_of_the_tags():
+    raw = "Crisis Comms / ORM / Legal Takedown (product-safety recall messaging, carrier/retailer messaging across markets)"
+    assert parse_onlyne_relevance(raw) == ["Crisis Comms", "ORM", "Legal Takedown"]
+
+
+def test_parse_onlyne_relevance_strips_dash_commentary_from_tags():
+    raw = "ORM / Search Results Management — a textbook example of how a statement becomes counter-evidence"
+    assert parse_onlyne_relevance(raw) == ["ORM", "Search Results Management"]
+
+
+def test_clean_key_sources_drops_the_case_separator():
+    assert clean_key_sources("- BBC, 'Timeline'\n- Reuters\n\n---") == "- BBC, 'Timeline'\n- Reuters"
 
 
 def test_build_case_success():
@@ -158,7 +173,8 @@ def test_build_case_success():
     assert case.case_id == "india_case_001"
     assert case.year == 2009
     assert case.response_speed_score == 2
-    assert case.onlyne_relevance == ["ORM", "Crisis Comms", "Legal Takedown (retrospective note)"]
+    assert case.onlyne_relevance == ["ORM", "Crisis Comms", "Legal Takedown"]
+    assert "retrospective note" in case.onlyne_note
 
 
 def test_build_case_missing_field_logs_error_and_returns_none():

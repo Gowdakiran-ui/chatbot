@@ -101,8 +101,12 @@ _CRISIS_SECTION_TITLES = {
     "went_right": "What went right",
     "went_wrong": "What went wrong",
     "best_practice": "Lesson / best practice",
+    "response_assessment": "How the company responded (speed, transparency, dated timeline)",
+    "legal_framework": "Legal and regulatory consequences",
 }
-_CRISIS_SECTION_ORDER = ("trigger_event", "went_right", "went_wrong", "best_practice")
+_CRISIS_SECTION_ORDER = ("trigger_event", "response_assessment", "went_right", "went_wrong", "best_practice", "legal_framework")
+# Always added to a case's context (fetched when they were not themselves a hit): the lesson, and the dated timeline.
+_CRISIS_ALWAYS_INCLUDED = ("best_practice", "response_assessment")
 
 
 def expand_crisis_case(client: QdrantClient, collection: str, payloads: list[dict]) -> str:
@@ -111,14 +115,14 @@ def expand_crisis_case(client: QdrantClient, collection: str, payloads: list[dic
     The case summary only holds facts (company, year, trigger, resolution, impact); the advice lives in
     the went_right / went_wrong / best_practice sections. `expand_crisis_chunk` swapped a matched section
     for the summary, so the matched advice never reached the model. This keeps the summary, adds every
-    matched section, and always adds the case's best_practice lesson (fetched if it was not itself a hit).
+    matched section, and always adds the case's best_practice lesson and, where the KB has it, the dated
+    response assessment (fetched if they were not themselves hits).
     """
     case_id = payloads[0]["case_id"]
     sections: dict[str, str] = {p["chunk_type"]: p["text"] for p in payloads if p.get("chunk_type") != "summary"}
     summary = next((p["text"] for p in payloads if p.get("chunk_type") == "summary"), None)
     wanted = [f"{case_id}_summary"] if summary is None else []
-    if "best_practice" not in sections:
-        wanted.append(f"{case_id}_best_practice")
+    wanted += [f"{case_id}_{kind}" for kind in _CRISIS_ALWAYS_INCLUDED if kind not in sections]
     if wanted:
         for point in client.retrieve(collection, ids=[_point_id(cid) for cid in wanted], with_payload=True):
             if point.payload.get("chunk_type") == "summary":

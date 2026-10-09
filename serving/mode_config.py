@@ -31,7 +31,7 @@ from qdrant_client import QdrantClient
 from db.crisis_qdrant_client import get_client as get_crisis_client
 from db.parent_expansion import expand_chanakya_chunk, expand_crisis_case, expand_crisis_chunk
 from db.qdrant_client import get_client as get_chanakya_client
-from serving.config import CHANAKYA_MIN_SCORE, CRISIS_MIN_SCORE
+from serving.config import CHANAKYA_MIN_SCORE, CRISIS_MIN_SCORE, CRISIS_MAX_CONTEXT_CHARS, CRISIS_TOP_K, MAX_CONTEXT_CHARS
 from serving.sources import SourceInfoFn, chanakya_source_info, crisis_source_info, generic_source_info
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -77,6 +77,8 @@ class ModeConfig(BaseModel):
     match_label_in_answer: bool = False
     # When set, hits sharing this payload field (e.g. a crisis case_id) are merged into ONE context chunk built by
     # expand_group_fn from all of their payloads, instead of one chunk per hit.
+    # Character budget for all context handed to the model for one turn (per mode: crisis cases are longer).
+    max_context_chars: int = MAX_CONTEXT_CHARS
     group_field: str | None = None
     expand_group_fn: ExpandGroupFn | None = None
 
@@ -96,7 +98,8 @@ MODE_CONFIG: dict[Mode, ModeConfig] = {
     Mode.CRISIS: ModeConfig(
         collection_alias="crisis_kb",
         system_prompt_path=PROMPTS_DIR / "crisis_system.md",
-        top_k=5,
+        top_k=CRISIS_TOP_K,
+        max_context_chars=CRISIS_MAX_CONTEXT_CHARS,
         # Stricter than chanakya: a missed precedent is a worse failure than a
         # missed leadership quote (task.md). Real crisis hits score ~0.66-0.71
         # dense; irrelevant queries top out ~0.51 — 0.65 sits close under the

@@ -36,6 +36,9 @@ class CrisisChunkType(str, Enum):
     WENT_RIGHT = "went_right"
     WENT_WRONG = "went_wrong"
     BEST_PRACTICE = "best_practice"
+    # Added from fields the parser already extracted but the chunker used to drop:
+    RESPONSE_ASSESSMENT = "response_assessment"  # response type + speed/transparency rationale (dated timelines)
+    LEGAL_FRAMEWORK = "legal_framework"  # laws/regulators the crisis triggered
 
 
 # Two early batch files predate the region-in-filename convention adopted by later

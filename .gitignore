@@ -71,4 +71,4 @@ docs-internal/
 
 # --- Regression run outputs (scratch) ---
 results/
-data/snapshots/
+data/snapshots*/

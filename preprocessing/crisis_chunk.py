@@ -24,6 +24,9 @@ def _build_metadata(case: ParsedCase, chunk_type: CrisisChunkType) -> CrisisChun
         resolution_status=case.resolution_status,
         onlyne_relevance=case.onlyne_relevance,
         chunk_type=chunk_type,
+        response_type=case.response_type,
+        key_sources=case.key_sources,
+        onlyne_note=case.onlyne_note,
     )
 
 
@@ -111,5 +114,31 @@ def build_section_chunks(case: ParsedCase) -> list[CrisisChunkRecord]:
     return records
 
 
+def build_assessment_chunk(case: ParsedCase) -> CrisisChunkRecord:
+    """How fast and how openly the company responded, with the dated rationale from the case file
+    (e.g. "discovered July 29, disclosed Sept 7"). This is the closest thing the KB has to a timeline."""
+    text = (
+        f"Response type: {case.response_type}\n"
+        f"Response speed: {case.response_speed_score_raw}\n"
+        f"Transparency: {case.transparency_score_raw}"
+    )
+    return CrisisChunkRecord(
+        id=f"{case.case_id}_{CrisisChunkType.RESPONSE_ASSESSMENT.value}",
+        text=text,
+        chunk_type=CrisisChunkType.RESPONSE_ASSESSMENT,
+        metadata=_build_metadata(case, CrisisChunkType.RESPONSE_ASSESSMENT),
+    )
+
+
+def build_legal_chunk(case: ParsedCase) -> CrisisChunkRecord:
+    """The laws, regulators and enforcement the crisis triggered (the case file's own text)."""
+    return CrisisChunkRecord(
+        id=f"{case.case_id}_{CrisisChunkType.LEGAL_FRAMEWORK.value}",
+        text=case.legal_framework,
+        chunk_type=CrisisChunkType.LEGAL_FRAMEWORK,
+        metadata=_build_metadata(case, CrisisChunkType.LEGAL_FRAMEWORK),
+    )
+
+
 def build_case_chunks(case: ParsedCase) -> list[CrisisChunkRecord]:
-    return [build_summary_chunk(case), *build_section_chunks(case)]
+    return [build_summary_chunk(case), *build_section_chunks(case), build_assessment_chunk(case), build_legal_chunk(case)]

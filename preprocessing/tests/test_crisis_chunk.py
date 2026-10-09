@@ -57,11 +57,27 @@ def test_build_section_chunks_produces_four_chunks():
     }
 
 
-def test_build_case_chunks_yields_five_total():
+def test_build_case_chunks_yields_seven_total():
     case = _sample_case()
     chunks = build_case_chunks(case)
-    assert len(chunks) == 5
+    assert len(chunks) == 7
     assert chunks[0].chunk_type == CrisisChunkType.SUMMARY
+    assert {c.chunk_type for c in chunks[-2:]} == {CrisisChunkType.RESPONSE_ASSESSMENT, CrisisChunkType.LEGAL_FRAMEWORK}
+
+
+def test_assessment_chunk_carries_type_and_both_rationales():
+    case = _sample_case(response_type="Delayed, then Reactive", response_speed_score_raw="1/5 - disclosed 40 days late", transparency_score_raw="2/5 - partial")
+    chunk = build_case_chunks(case)[-2]
+    assert chunk.id == "india_case_001_response_assessment"
+    for needle in ("Delayed, then Reactive", "disclosed 40 days late", "partial"):
+        assert needle in chunk.text
+
+
+def test_legal_chunk_and_sources_metadata():
+    case = _sample_case(legal_framework="SEBI probe and SFIO investigation", key_sources="SEC.gov")
+    legal = build_case_chunks(case)[-1]
+    assert legal.id == "india_case_001_legal_framework" and legal.text == "SEBI probe and SFIO investigation"
+    assert legal.metadata.key_sources == "SEC.gov"
 
 
 def test_metadata_shared_across_all_chunks():

@@ -71,3 +71,9 @@ CRISIS_MIN_SCORE = float(os.environ.get("CRISIS_MIN_SCORE", "0.65"))
 # Load the embedding models when the app starts instead of on the first request (which otherwise
 # takes ~12 s locally and ~60 s on the 1 GB VM). Set WARMUP_ON_STARTUP=false to skip, e.g. in tests.
 WARMUP_ON_STARTUP = os.environ.get("WARMUP_ON_STARTUP", "true").strip().lower() not in ("0", "false", "no")
+
+# Crisis cases are split into seven chunk types, so several of the top hits usually belong to the same case; a larger
+# top_k and context budget keep about four distinct cases (with their lessons and response timelines) in front of the
+# model. Measured on the eval set: gold-case coverage is unchanged, context grows from ~2.4k to ~3.5k tokens.
+CRISIS_TOP_K = int(os.environ.get("CRISIS_TOP_K", "8"))
+CRISIS_MAX_CONTEXT_CHARS = int(os.environ.get("CRISIS_MAX_CONTEXT_CHARS", "16000"))

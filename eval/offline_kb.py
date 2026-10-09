@@ -7,6 +7,7 @@ behaves identically, but nothing here ever touches the live cluster. Build snaps
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 from qdrant_client import QdrantClient
@@ -14,7 +15,14 @@ from qdrant_client.models import Distance, PointStruct, SparseVector, SparseVect
 
 from db.config import DENSE_VECTOR_NAME, SPARSE_VECTOR_NAME, VECTOR_SIZE
 
-SNAPSHOT_DIR = Path(__file__).resolve().parent.parent / "data" / "snapshots"
+DEFAULT_SNAPSHOT_DIR = Path(__file__).resolve().parent.parent / "data" / "snapshots"
+# KB_SNAPSHOT_DIR lets an experiment swap in a rebuilt KB; files missing there fall back to the default snapshot.
+SNAPSHOT_DIR = Path(os.environ.get("KB_SNAPSHOT_DIR", DEFAULT_SNAPSHOT_DIR))
+
+
+def _snapshot_file(name: str) -> Path:
+    candidate = SNAPSHOT_DIR / f"{name}.jsonl"
+    return candidate if candidate.exists() else DEFAULT_SNAPSHOT_DIR / f"{name}.jsonl"
 
 
 def load_collection(client: QdrantClient, name: str) -> int:
@@ -24,7 +32,7 @@ def load_collection(client: QdrantClient, name: str) -> int:
         sparse_vectors_config={SPARSE_VECTOR_NAME: SparseVectorParams()},
     )
     batch, total = [], 0
-    for line in (SNAPSHOT_DIR / f"{name}.jsonl").open(encoding="utf-8"):
+    for line in _snapshot_file(name).open(encoding="utf-8"):
         row = json.loads(line)
         sparse = row["sparse"]
         batch.append(PointStruct(
