@@ -126,7 +126,12 @@ function AssistantMessage({ m, isLast }: { m: Msg; isLast: boolean }) {
               <Markdown text={body} />
             </div>
           ))}
-        {streaming && !body && <div className="streaming md empty" aria-label="Chanakya is writing" />}
+        {streaming && !body && (
+          <div role="status" className="thinking">
+            <i aria-hidden="true"><b /><b /><b /></i>
+            <span>Chanakya is thinking&hellip;</span>
+          </div>
+        )}
         {!streaming && truncated && (
           <p role="note" className="flex items-start gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-[13px] leading-snug">
             <Scissors size={15} className="mt-px shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
@@ -163,7 +168,7 @@ function AssistantMessage({ m, isLast }: { m: Msg; isLast: boolean }) {
         )}
         {!streaming && m.stopped && m.content && <p className="text-xs text-muted">Generation stopped.</p>}
         {!streaming && m.sources && m.sources.length > 0 && <SourceChips sources={m.sources} />}
-        {!streaming && (
+        {!streaming && !m.refused && !m.error && (
           <div className={`-ml-1.5 flex gap-0.5 transition-opacity duration-150 focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100 ${isLast ? 'opacity-100' : 'opacity-0'}`}>
             {body && <CopyButton text={m.content} />}
             <IconButton label="Regenerate" onClick={retry} disabled={busy || waiting}>

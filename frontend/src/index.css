@@ -9,9 +9,9 @@
   --surface: #f0eee6;
   --elevated: #ffffff;
   --text: #141413;
-  --text-muted: #73726c;
+  --text-muted: #65645e; /* >= 5:1 on every light surface (was #73726c = 4.15:1 on the sidebar) */
   --border: #e4e1d6;
-  --accent: #c96442;
+  --accent: #b95a38; /* white text on it >= 4.5:1 (was #c96442 = 3.9:1) */
   --accent-fg: #ffffff;
   --danger: #b4413a;
   --user-bubble: #efece1;
@@ -314,8 +314,7 @@ button:disabled {
 .md.streaming > h3:last-child::after,
 .md.streaming > blockquote:last-child > p:last-child::after,
 .md.streaming > ul:last-child > li:last-child::after,
-.md.streaming > ol:last-child > li:last-child::after,
-.streaming.md.empty::after {
+.md.streaming > ol:last-child > li:last-child::after {
   content: '';
   display: inline-block;
   width: 2px;
@@ -325,6 +324,45 @@ button:disabled {
   background: var(--accent);
   border-radius: 1px;
   animation: blink 1s steps(2, start) infinite;
+}
+
+/* waiting for the first token */
+.thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2rem;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.thinking > i {
+  display: inline-flex;
+  gap: 4px;
+}
+.thinking > i > b {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--accent);
+  animation: think 1.2s ease-in-out infinite;
+}
+.thinking > i > b:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.thinking > i > b:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes think {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* -------------------------------------------------------------- code blocks */

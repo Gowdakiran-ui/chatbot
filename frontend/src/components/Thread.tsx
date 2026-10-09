@@ -51,7 +51,7 @@ export function Thread() {
           )}
         </div>
       </div>
-      <div className="relative shrink-0 px-4 pb-3 pt-1">
+      <div className="relative shrink-0 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1">
         <div className="pointer-events-none absolute inset-x-0 -top-8 h-8 bg-gradient-to-t from-bg to-transparent" />
         {!atBottom && (
           <button

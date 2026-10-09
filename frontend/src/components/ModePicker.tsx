@@ -35,7 +35,7 @@ export function ModePicker() {
         aria-label={`Mode: ${MODES[mode].label}`}
         title="Switch mode (starts a new chat)"
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex h-9 max-w-[12rem] items-center gap-1.5 rounded-xl px-2.5 text-[13px] text-muted transition-colors duration-150 hover:bg-fg/[0.07] hover:text-fg sm:max-w-[16rem]"
+        className="inline-flex h-9 max-md:h-11 max-w-[12rem] items-center gap-1.5 rounded-xl px-2.5 text-[13px] text-muted transition-colors duration-150 hover:bg-fg/[0.07] hover:text-fg sm:max-w-[16rem]"
       >
         <span className="truncate">{MODES[mode].label}</span>
         <ChevronDown size={14} className={`shrink-0 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} aria-hidden="true" />

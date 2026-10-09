@@ -107,7 +107,6 @@ export const useChat = create<ChatState>((set, get) => {
       {
         onToken: (t) => {
           text += t
-          if (useUI.getState().banner?.type === 'offline') useUI.getState().setBanner(null)
           if (!raf) raf = requestAnimationFrame(flush)
         },
         onFinal: (e) => {
@@ -128,7 +127,7 @@ export const useChat = create<ChatState>((set, get) => {
     const err = error as ChatError | null
     const fin = final as FinalEvent | null
     if (err?.kind === 'rate_limited') useUI.getState().setBanner({ type: 'rate_limited', until: Date.now() + (err.retryAfter ?? 5) * 1000 })
-    else if (err?.kind === 'network') useUI.getState().setBanner({ type: 'offline' })
+    // network errors are shown once, inline on the failed message (with its Retry), not again as a global banner
     patchMessage(assistant.uid, (m) => ({
       ...m,
       content: text,

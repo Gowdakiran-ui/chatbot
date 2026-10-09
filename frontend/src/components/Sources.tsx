@@ -8,26 +8,34 @@ import { IconButton } from './ui'
 /** Numbered pills under an answer; each opens the drawer with the full source detail. */
 export function SourceChips({ sources }: { sources: SourceRef[] }) {
   const openSources = useUI((s) => s.openSources)
+  // Several passages from one book carry the same label; show it once with a count instead of identical pills.
+  const groups = sources.reduce<{ label: string; first: SourceRef; count: number }[]>((acc, s) => {
+    const g = acc.find((x) => x.label === s.label)
+    if (g) g.count += 1
+    else acc.push({ label: s.label, first: s, count: 1 })
+    return acc
+  }, [])
   return (
     <div className="anim-fade mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Sources">
-      {sources.map((s, i) => (
+      {groups.map(({ first: s, label, count }, i) => (
         <button
           key={s.id}
           type="button"
           onClick={() => openSources(sources)}
-          title={s.label}
-          className="group inline-flex max-w-[16rem] items-center gap-1.5 rounded-full border border-line bg-elevated py-1 pl-1.5 pr-3 text-[13px] leading-none text-fg transition-colors duration-150 hover:border-accent/60"
+          title={count > 1 ? `${label} (${count} passages)` : label}
+          className="group inline-flex max-w-[16rem] items-center gap-1.5 rounded-full border border-line bg-elevated py-1.5 pl-1.5 pr-3 text-[13px] leading-none text-fg max-md:min-h-11 pointer-coarse:min-h-11 transition-colors duration-150 hover:border-accent/60"
         >
-          <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-surface px-1 text-[11px] font-medium text-muted group-hover:bg-accent group-hover:text-accent-fg">
+          <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-surface px-1 text-xs font-medium text-muted group-hover:bg-accent group-hover:text-accent-fg">
             {i + 1}
           </span>
-          <span className="truncate">{s.label}</span>
+          <span className="truncate">{label}</span>
+          {count > 1 && <span className="shrink-0 text-xs text-muted">&times;{count}</span>}
         </button>
       ))}
       <button
         type="button"
         onClick={() => openSources(sources)}
-        className="rounded-full px-2.5 py-1 text-[13px] leading-none text-muted transition-colors duration-150 hover:bg-fg/[0.07] hover:text-fg"
+        className="rounded-full px-2.5 py-2 text-[13px] leading-none text-muted transition-colors duration-150 hover:bg-fg/[0.07] hover:text-fg max-md:min-h-11 pointer-coarse:min-h-11"
       >
         {sources.length} source{sources.length === 1 ? '' : 's'}
       </button>
@@ -74,7 +82,7 @@ export function SourcesPanel() {
                 {chips.length > 0 && (
                   <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label="Tags">
                     {chips.map((c) => (
-                      <li key={c} title={c} className="rounded-full border border-line px-2 py-0.5 text-[11.5px] leading-snug text-muted">
+                      <li key={c} title={c} className="rounded-full border border-line px-2 py-0.5 text-xs leading-snug text-muted">
                         {c.length > CHIP_MAX ? `${c.slice(0, CHIP_MAX - 1).trimEnd()}…` : c}
                       </li>
                     ))}

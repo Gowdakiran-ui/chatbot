@@ -34,7 +34,7 @@ export function applyTheme(theme: Theme, animate = true) {
   store.set('chanakya:theme', theme)
 }
 
-export type Banner = { type: 'rate_limited'; until: number } | { type: 'offline' }
+export type Banner = { type: 'rate_limited'; until: number }
 
 interface UIState {
   theme: Theme

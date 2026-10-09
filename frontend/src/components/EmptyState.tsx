@@ -12,7 +12,7 @@ export function EmptyState() {
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 pb-16 pt-6">
       {/* keyed by mode so the entrance animation replays when the mode changes */}
       <div key={mode} className="anim-rise w-full max-w-[720px]">
-        <h1 className="mb-3 flex items-center justify-center gap-3.5 text-center font-serif text-[clamp(30px,6vw,42px)] font-medium leading-tight tracking-tight">
+        <h1 className="mb-3 flex flex-col items-center justify-center gap-3 text-center sm:flex-row sm:gap-3.5 font-serif text-[clamp(30px,6vw,42px)] font-medium leading-tight tracking-tight">
           <Mark size={40} />
           <span>{cfg.title}</span>
         </h1>

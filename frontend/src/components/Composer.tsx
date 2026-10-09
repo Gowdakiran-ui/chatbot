@@ -58,7 +58,8 @@ export function Composer({ autoFocus = true }: { autoFocus?: boolean }) {
         className="block max-h-[212px] w-full resize-none bg-transparent px-5 pb-1 pt-4 text-[16px] leading-[26px] outline-none placeholder:text-muted"
       />
       <div className="flex items-center gap-1 px-2.5 pb-2.5 pt-1">
-        <p className="min-w-0 flex-1 truncate px-2.5 text-xs text-muted" title={SINGLE_TURN_DETAIL}>
+        <span className="flex-1 sm:hidden" aria-hidden="true" />
+        <p className="min-w-0 flex-1 truncate px-2.5 text-xs text-muted max-sm:sr-only" title={SINGLE_TURN_DETAIL}>
           {nearLimit ? `${text.length} / ${MAX_MESSAGE_LENGTH}` : SINGLE_TURN_HINT}
         </p>
         <ModePicker />
@@ -68,7 +69,7 @@ export function Composer({ autoFocus = true }: { autoFocus?: boolean }) {
             onClick={stop}
             aria-label="Stop generating"
             title="Stop (Esc)"
-            className="ml-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-fg text-bg transition-opacity duration-150 hover:opacity-85"
+            className="ml-1 inline-flex h-9 w-9 max-md:h-11 max-md:w-11 shrink-0 items-center justify-center rounded-full bg-fg text-bg transition-opacity duration-150 hover:opacity-85"
           >
             <Square size={13} fill="currentColor" />
           </button>
@@ -79,7 +80,7 @@ export function Composer({ autoFocus = true }: { autoFocus?: boolean }) {
             disabled={!canSend}
             aria-label="Send message"
             title={waiting ? 'Please wait for the rate limit to clear' : 'Send (Enter)'}
-            className="ml-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-fg transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-95 disabled:bg-fg/15 disabled:text-muted"
+            className="ml-1 inline-flex h-9 w-9 max-md:h-11 max-md:w-11 shrink-0 items-center justify-center rounded-full bg-accent text-accent-fg transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-95 disabled:bg-fg/15 disabled:text-muted"
           >
             <ArrowUp size={18} strokeWidth={2.4} />
           </button>

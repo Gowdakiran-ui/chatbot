@@ -64,10 +64,10 @@ function ConvItem({ c, active }: { c: Conversation; active: boolean }) {
         data-active={active}
         aria-current={active ? 'page' : undefined}
         title={c.title}
-        className="row flex w-full items-center rounded-lg py-2 pl-2.5 pr-2 text-left text-sm"
+        className="row flex w-full items-center rounded-lg py-2 pl-2.5 pr-2 text-left text-sm max-md:min-h-11"
       >
-        <span className="mr-2 shrink-0 rounded border border-line px-1.5 text-[10.5px] leading-[16px] text-muted">{MODES[c.mode].tag}</span>
-        <span className="truncate pr-14">{c.title}</span>
+        <span className="mr-2 shrink-0 rounded border border-line px-1.5 text-xs leading-[16px] text-muted">{MODES[c.mode].tag}</span>
+        <span className="truncate pr-14 max-md:pr-24">{c.title}</span>
       </button>
       <div
         className={`absolute inset-y-0 right-2 flex items-center gap-0.5 transition-opacity duration-150 focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100 ${confirm ? 'opacity-100' : 'opacity-0'}`}
@@ -75,19 +75,19 @@ function ConvItem({ c, active }: { c: Conversation; active: boolean }) {
         {confirm ? (
           <>
             <span className="mr-1 text-xs text-muted">Delete?</span>
-            <IconButton label="Confirm delete" className="!h-7 !w-7 !text-danger" onClick={() => remove(c.id)}>
+            <IconButton label="Confirm delete" className="!h-7 !w-7 !text-danger max-md:!h-11 max-md:!w-11" onClick={() => remove(c.id)}>
               <Check size={15} />
             </IconButton>
-            <IconButton label="Cancel delete" className="!h-7 !w-7" onClick={() => setConfirm(false)}>
+            <IconButton label="Cancel delete" className="!h-7 !w-7 max-md:!h-11 max-md:!w-11" onClick={() => setConfirm(false)}>
               <X size={15} />
             </IconButton>
           </>
         ) : (
           <>
-            <IconButton label="Rename chat" className="!h-7 !w-7" onClick={() => { setDraft(c.title); setEditing(true) }}>
+            <IconButton label="Rename chat" className="!h-7 !w-7 max-md:!h-11 max-md:!w-11" onClick={() => { setDraft(c.title); setEditing(true) }}>
               <Pencil size={14} />
             </IconButton>
-            <IconButton label="Delete chat" className="!h-7 !w-7" onClick={() => setConfirm(true)}>
+            <IconButton label="Delete chat" className="!h-7 !w-7 max-md:!h-11 max-md:!w-11" onClick={() => setConfirm(true)}>
               <Trash2 size={14} />
             </IconButton>
           </>
@@ -139,11 +139,11 @@ export function Sidebar() {
               if (isMobile()) setSidebar(false)
               requestAnimationFrame(() => document.getElementById('composer-input')?.focus())
             }}
-            className="flex w-full items-center gap-2 rounded-xl border border-line bg-elevated px-3 py-2 text-sm font-medium shadow-soft transition-colors duration-150 hover:border-accent/50"
+            className="flex w-full items-center gap-2 rounded-xl border border-line bg-elevated px-3 py-2 text-sm font-medium shadow-soft max-md:min-h-11 transition-colors duration-150 hover:border-accent/50"
           >
             <Plus size={17} className="text-accent" />
             New chat
-            <kbd className="ml-auto hidden rounded border border-line px-1.5 font-sans text-[11px] text-muted lg:inline">Ctrl K</kbd>
+            <kbd className="ml-auto hidden rounded border border-line px-1.5 font-sans text-xs text-muted lg:inline">Ctrl K</kbd>
           </button>
           <label className="relative block">
             <span className="sr-only">Search chats</span>
@@ -152,7 +152,7 @@ export function Sidebar() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search chats"
-              className="w-full rounded-xl bg-fg/[0.05] py-2 pl-9 pr-3 text-sm outline-none transition-colors duration-150 placeholder:text-muted focus:bg-fg/[0.08]"
+              className="w-full rounded-xl bg-fg/[0.05] py-2 pl-9 pr-3 text-sm outline-none max-md:min-h-11 transition-colors duration-150 placeholder:text-muted focus:bg-fg/[0.08]"
             />
           </label>
         </div>
@@ -177,7 +177,7 @@ export function Sidebar() {
           <button
             type="button"
             onClick={() => setSettingsOpen(true)}
-            className="row flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm"
+            className="row flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm max-md:min-h-11"
           >
             <Settings size={17} className="text-muted" />
             Settings
