@@ -41,6 +41,7 @@ from serving.auth import ClientIdentity, get_current_client
 from serving.config import (
     ALLOWED_ORIGINS,
     AUTH_DISABLED,
+    WARMUP_ON_STARTUP,
     GENERATION_CONCURRENCY_LIMIT,
     GENERATION_RETRY_AFTER_SECONDS,
     MAX_BODY_BYTES,
@@ -55,11 +56,12 @@ from serving.groundedness_check import check_groundedness
 from serving.injection_check import check_for_injection
 from serving.middleware import BodySizeLimitMiddleware
 from serving.mode_config import MODE_CONFIG, Mode
+from serving.output_filter import ChunkIdStripper, verse_refs_not_in_context
 from serving.prompt import build_prompt
 from serving.rate_limit import GenerationConcurrencyLimiter, InMemoryTokenBucketLimiter
 from serving.retrieval import RetrievalResult, retrieve_context
 from serving.secrets import redact_secrets
-from serving.sources import build_sources
+from serving.sources import build_sources, select_used_chunks
 
 logger = logging.getLogger("serving.app")
 
@@ -97,6 +99,19 @@ if AUTH_DISABLED:
     )
 
 app = FastAPI()
+
+
+@app.on_event("startup")
+def _warm_embedding_models() -> None:
+    """Pay the one-time embedding-model load at startup, not on the first user's request."""
+    if not WARMUP_ON_STARTUP:
+        return
+    from db.embedding import embed_query
+    from db.sparse_embedding import embed_query_sparse
+
+    embed_query("warm-up")
+    embed_query_sparse("warm-up")
+    logger.info("embedding models warmed up")
 
 # Explicit allowlist, config-driven, never "*" — see serving/config.py.
 app.add_middleware(
@@ -199,6 +214,7 @@ def _sse(event: dict) -> str:
 # Generation-quality fixes task, Fix 1: appended instead of ending on a cut-off
 # sentence when OpenRouter's finish_reason reports the response was cut off by
 # max_tokens. Deliberately short and honest, not a generic error.
+USER_FACING_ERROR = "The answer service is temporarily unavailable. Please try again in a moment."
 TRUNCATION_NOTICE = "\n\n[Response truncated — ask a follow-up for more detail.]"
 
 
@@ -244,16 +260,26 @@ def _attempt_generation(
     prompt: str,
     system: str,
     max_tokens: int,
+    known_chunk_ids: tuple[str, ...] = (),
 ) -> Generator[str, None, str]:
     """Runs one provider.generate() call, yielding SSE token events live as
     they arrive, and returns the concatenated text via `yield from`'s return
     value. Shared by the initial attempt and the single empty-response retry
     below so their error handling can't drift apart."""
     parts: list[str] = []
+    # Chunk ids are shown to the model as "[id]" headers and it sometimes echoes them;
+    # strip them from what the client sees (and from the text we keep).
+    stripper = ChunkIdStripper(known_chunk_ids)
     try:
         for token in provider.generate(prompt, system, stream=True, max_tokens=max_tokens):
-            parts.append(token)
-            yield _sse({"type": "token", "text": token})
+            clean = stripper.feed(token)
+            if clean:
+                parts.append(clean)
+                yield _sse({"type": "token", "text": clean})
+        tail = stripper.flush()
+        if tail:
+            parts.append(tail)
+            yield _sse({"type": "token", "text": tail})
     except Exception as exc:
         # Belt and suspenders: no code path should embed a credential in an
         # exception message in the first place (see serving/secrets.py's
@@ -267,7 +293,7 @@ def _attempt_generation(
             request.message,
             safe_message,
         )
-        yield _sse({"type": "error", "message": safe_message})
+        yield _sse({"type": "error", "message": USER_FACING_ERROR})  # detail stays in the log above, not in the UI
         raise _GenerationFailed from exc
     return "".join(parts)
 
@@ -283,10 +309,17 @@ def _stream_generation(
     config = MODE_CONFIG[request.mode]
     try:
         system = config.system_prompt_path.read_text(encoding="utf-8")
-        prompt = build_prompt(request.message, result)
+        def _describe(payload: dict) -> tuple[str, str]:
+            info = config.source_info_fn(payload)
+            return info.label, info.kind
+
+        prompt = build_prompt(request.message, result, _describe)
+        known_chunk_ids = tuple(chunk.chunk_id for chunk in result.chunks)
 
         try:
-            full_text = yield from _attempt_generation(client, request, provider, prompt, system, config.max_tokens)
+            full_text = yield from _attempt_generation(
+                client, request, provider, prompt, system, config.max_tokens, known_chunk_ids
+            )
         except _GenerationFailed:
             return
 
@@ -311,7 +344,7 @@ def _stream_generation(
             )
             try:
                 full_text = yield from _attempt_generation(
-                    client, request, provider, prompt, system, config.max_tokens
+                    client, request, provider, prompt, system, config.max_tokens, known_chunk_ids
                 )
             except _GenerationFailed:
                 return
@@ -347,6 +380,22 @@ def _stream_generation(
                 full_text,
             )
 
+        # Detection only: verse references in the answer that none of the supplied chunks contain.
+        unsupported_refs = verse_refs_not_in_context(full_text, groundedness_context)
+        if unsupported_refs:
+            logger.warning(
+                "unsupported_verse_ref client_id=%s mode=%s query=%r refs=%s",
+                client.client_id,
+                request.mode.value,
+                request.message,
+                unsupported_refs,
+            )
+
+        # Show (and log) only the chunks the answer actually used, not everything retrieved.
+        used_chunks = select_used_chunks(
+            full_text, result.chunks, config.source_info_fn, config.match_label_in_answer
+        )
+
         # Fix 1: detect truncation directly from OpenRouter's finish_reason
         # rather than guessing from content. "length" means max_tokens cut the
         # response off mid-generation — even at crisis mode's higher 1400 cap,
@@ -378,7 +427,7 @@ def _stream_generation(
             full_text += addendum
 
         latency = time.monotonic() - start
-        cited_chunk_ids = [chunk.chunk_id for chunk in result.chunks]
+        cited_chunk_ids = [chunk.chunk_id for chunk in used_chunks]
         logger.info(
             "chat_turn client_id=%s mode=%s query=%r path=generation top_score=%.4f top_dense_score=%.4f "
             "latency=%.3f flagged=%s groundedness_flagged=%s truncated=%s finish_reason=%s output_tokens=%s "
@@ -405,7 +454,7 @@ def _stream_generation(
                 "top_score": result.top_score,
                 "top_dense_score": result.top_dense_score,
                 "cited_chunk_ids": cited_chunk_ids,
-                "sources": [ref.model_dump() for ref in build_sources(result.chunks, config.source_info_fn)],
+                "sources": [ref.model_dump() for ref in build_sources(used_chunks, config.source_info_fn)],
                 "conversation_id": request.conversation_id,
             }
         )

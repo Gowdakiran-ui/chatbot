@@ -152,3 +152,16 @@ def test_no_hits_returns_empty_result_with_zeroed_top_scores(tmp_path, client):
     assert result.chunks == []
     assert result.top_score == 0.0
     assert result.top_dense_score == 0.0
+
+
+def test_top_dense_score_is_the_best_hit_not_the_first_ranked_hit():
+    from serving.retrieval import RawHit, RetrievalResult
+
+    hits = [
+        RawHit(chunk_id="a", score=0.5, dense_score=0.52),
+        RawHit(chunk_id="b", score=0.5, dense_score=0.66),  # tied RRF rank, better similarity
+    ]
+    result = RetrievalResult(query="q", mode=Mode.CHANAKYA, raw_hits=hits, chunks=[])
+    assert result.top_dense_score == pytest.approx(0.66)
+    flipped = result.model_copy(update={"raw_hits": list(reversed(hits))})
+    assert flipped.top_dense_score == result.top_dense_score

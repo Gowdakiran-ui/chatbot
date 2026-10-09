@@ -34,7 +34,7 @@ class _FakeResponse:
 
 @pytest.fixture
 def provider():
-    return OpenRouterProvider(model="deepseek/deepseek-v4-pro", api_key="test-key")
+    return OpenRouterProvider(model="deepseek/deepseek-v4-pro", api_key="test-key", retry_delays=())
 
 
 def test_provider_satisfies_generation_provider_protocol(provider):
@@ -274,8 +274,8 @@ def test_generate_sync_records_usage_and_estimates_cost(monkeypatch, provider):
 
     provider.generate("prompt", "system", stream=False)
 
-    assert provider.usage_log == [{"input_tokens": 1000, "output_tokens": 500, "estimated_cost": pytest.approx(0.000870)}]
-    assert provider.total_estimated_cost() == pytest.approx(0.000870)
+    assert provider.usage_log == [{"input_tokens": 1000, "output_tokens": 500, "estimated_cost": pytest.approx(0.001915)}]
+    assert provider.total_estimated_cost() == pytest.approx(0.001915)
 
 
 def test_generate_stream_records_usage_from_final_chunk_without_yielding_it_as_content(monkeypatch, provider):
@@ -295,7 +295,7 @@ def test_generate_stream_records_usage_from_final_chunk_without_yielding_it_as_c
     chunks = list(provider.generate("prompt", "system", stream=True))
 
     assert chunks == ["Hello"]  # the usage-only chunk contributed no content
-    assert provider.usage_log == [{"input_tokens": 200, "output_tokens": 80, "estimated_cost": pytest.approx(0.0001566)}]
+    assert provider.usage_log == [{"input_tokens": 200, "output_tokens": 80, "estimated_cost": pytest.approx(0.0003448)}]
 
 
 def test_total_estimated_cost_sums_across_multiple_calls(monkeypatch, provider):
@@ -312,7 +312,7 @@ def test_total_estimated_cost_sums_across_multiple_calls(monkeypatch, provider):
     provider.generate("prompt", "system", stream=False)
     provider.generate("prompt", "system", stream=False)
 
-    assert provider.total_estimated_cost() == pytest.approx(0.87)  # 2 x 1M input tokens @ $0.435/M
+    assert provider.total_estimated_cost() == pytest.approx(1.92)  # 2 x 1M input tokens @ $0.96/M (deepseek-v4-pro)
 
 
 def test_print_cost_summary_reports_totals(monkeypatch, provider, capsys):
@@ -395,3 +395,46 @@ def test_last_finish_reason_resets_between_calls(monkeypatch, provider):
     monkeypatch.setattr("providers.openrouter.requests.post", fake_post_stop)
     provider.generate("prompt", "system", stream=False)
     assert provider.last_finish_reason == "stop"
+
+
+def test_transient_http_status_is_retried_then_succeeds(monkeypatch):
+    calls = []
+
+    def fake_post(**kwargs):
+        calls.append(kwargs["url"])
+        if len(calls) == 1:
+            return _FakeResponse(status_code=503)
+        return _FakeResponse(json_data={"choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}]})
+
+    monkeypatch.setattr(requests, "post", fake_post)
+    p = OpenRouterProvider(model="anthropic/claude-haiku-5.5", api_key="k", retry_delays=(0.0, 0.0))
+    assert p.generate("q", "s") == "ok"
+    assert len(calls) == 2
+
+
+def test_payment_required_is_not_retried(monkeypatch):
+    calls = []
+
+    def fake_post(**kwargs):
+        calls.append(1)
+        return _FakeResponse(status_code=402)
+
+    monkeypatch.setattr(requests, "post", fake_post)
+    p = OpenRouterProvider(model="anthropic/claude-haiku-5.5", api_key="k", retry_delays=(0.0, 0.0))
+    with pytest.raises(OpenRouterError):
+        p.generate("q", "s")
+    assert len(calls) == 1
+
+
+def test_usage_log_is_bounded():
+    p = OpenRouterProvider(model="anthropic/claude-haiku-5.5", api_key="k", retry_delays=())
+    for _ in range(600):
+        p._record_usage({"prompt_tokens": 1, "completion_tokens": 1})
+    assert len(p.usage_log) == 500
+
+
+def test_cost_uses_the_models_own_prices():
+    from providers.openrouter import _estimate_cost
+
+    assert _estimate_cost(1_000_000, 0, "anthropic/claude-haiku-5.5") == pytest.approx(0.10)
+    assert _estimate_cost(1_000_000, 0, "deepseek/deepseek-v4-pro") == pytest.approx(0.96)

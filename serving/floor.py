@@ -32,14 +32,14 @@ GenerateFn = Callable[[RetrievalResult], str]
 
 _REFUSAL_TEXT: dict[Mode, str] = {
     Mode.CHANAKYA: (
-        "I do not have a teaching among my retrieved texts that speaks directly to this. "
+        "I do not have a teaching among my texts that speaks directly to this. "
         "I would rather tell you plainly that I lack a grounded source here than offer "
         "counsel I cannot trace back to the Arthashastra or Chanakya Niti."
     ),
     Mode.CRISIS: (
-        "I don't have a documented precedent among the retrieved crisis cases that "
-        "matches this situation closely enough to advise from. Rather than generalize "
-        "past what's grounded, I'm flagging this for human review. "
+        "That does not look like something I can advise on from the crisis cases I have on file. "
+        "If it is a reputation or crisis question, describe the situation in more detail "
+        "(who is involved, where it is happening, what has already been said) and I will try again. "
         f"{NOT_LEGAL_ADVICE_LINE}"
     ),
 }

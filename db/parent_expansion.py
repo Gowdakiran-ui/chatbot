@@ -94,3 +94,39 @@ def expand_crisis_chunk(client: QdrantClient, collection: str, payload: dict) ->
     if not points:
         return payload["text"]
     return points[0].payload["text"]
+
+
+_CRISIS_SECTION_TITLES = {
+    "trigger_event": "What triggered it",
+    "went_right": "What went right",
+    "went_wrong": "What went wrong",
+    "best_practice": "Lesson / best practice",
+}
+_CRISIS_SECTION_ORDER = ("trigger_event", "went_right", "went_wrong", "best_practice")
+
+
+def expand_crisis_case(client: QdrantClient, collection: str, payloads: list[dict]) -> str:
+    """Builds one context block for a crisis case from every hit that matched it.
+
+    The case summary only holds facts (company, year, trigger, resolution, impact); the advice lives in
+    the went_right / went_wrong / best_practice sections. `expand_crisis_chunk` swapped a matched section
+    for the summary, so the matched advice never reached the model. This keeps the summary, adds every
+    matched section, and always adds the case's best_practice lesson (fetched if it was not itself a hit).
+    """
+    case_id = payloads[0]["case_id"]
+    sections: dict[str, str] = {p["chunk_type"]: p["text"] for p in payloads if p.get("chunk_type") != "summary"}
+    summary = next((p["text"] for p in payloads if p.get("chunk_type") == "summary"), None)
+    wanted = [f"{case_id}_summary"] if summary is None else []
+    if "best_practice" not in sections:
+        wanted.append(f"{case_id}_best_practice")
+    if wanted:
+        for point in client.retrieve(collection, ids=[_point_id(cid) for cid in wanted], with_payload=True):
+            if point.payload.get("chunk_type") == "summary":
+                summary = point.payload["text"]
+            else:
+                sections[point.payload["chunk_type"]] = point.payload["text"]
+    parts = [summary or payloads[0]["text"]]
+    for kind in _CRISIS_SECTION_ORDER:
+        if kind in sections:
+            parts.append(f"{_CRISIS_SECTION_TITLES[kind]}:\n{sections[kind]}")
+    return "\n\n".join(parts)

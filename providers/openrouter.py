@@ -61,6 +61,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import time
 from pathlib import Path
 from typing import Iterator
 
@@ -83,15 +84,24 @@ _MODEL_ENV_VAR = "openrouter_model"
 # guarantees the intended, budgeted key wins over that collision, not whichever
 # env var happens to be case-insensitively equal.
 _API_KEY_ENV_VARS = ("open_router_api_key", "openrouter_api_key")
-_DEFAULT_MODEL = "deepseek/deepseek-v4-pro"
+_DEFAULT_MODEL = "anthropic/claude-haiku-5.5"
 _DEFAULT_TIMEOUT = 60  # seconds — generation can legitimately take a while but must stay bounded
 
 # Cost safety rail defaults (live-verification task, Piece 1; revised after Piece 2's
 # live smoke test found reasoning tokens exhausting the original 600-token cap with
 # zero visible output — see module docstring).
 DEFAULT_MAX_TOKENS = 800
-INPUT_PRICE_PER_MILLION_TOKENS = 0.435  # task.md's stated rate — see module docstring's pricing note
-OUTPUT_PRICE_PER_MILLION_TOKENS = 0.87
+# USD per million (input, output) tokens, from https://openrouter.ai/api/v1/models (checked 2026-10-09).
+# Prices change: update this table when the model changes. Unknown models fall back to the default model's rates.
+MODEL_PRICES_PER_MILLION = {
+    "anthropic/claude-haiku-5.5": (0.10, 0.50),
+    "anthropic/claude-sonnet-5.5": (2.00, 10.00),
+    "deepseek/deepseek-v4-pro": (0.96, 1.91),
+}
+MAX_USAGE_LOG_ENTRIES = 500  # the log is per provider instance (shared across requests): keep it bounded
+# Seconds to wait before each retry of a call that failed before any output (transient errors only).
+DEFAULT_RETRY_DELAYS = (1.0, 2.0)
+_RETRY_STATUS_CODES = (429, 500, 502, 503, 504)
 
 
 class OpenRouterError(RuntimeError):
@@ -113,19 +123,25 @@ def _get_model() -> str:
     return os.environ.get(_MODEL_ENV_VAR, _DEFAULT_MODEL)
 
 
-def _estimate_cost(input_tokens: int, output_tokens: int) -> float:
-    return (input_tokens / 1_000_000) * INPUT_PRICE_PER_MILLION_TOKENS + (
-        output_tokens / 1_000_000
-    ) * OUTPUT_PRICE_PER_MILLION_TOKENS
+def _estimate_cost(input_tokens: int, output_tokens: int, model: str | None = None) -> float:
+    price_in, price_out = MODEL_PRICES_PER_MILLION.get(model or _DEFAULT_MODEL, MODEL_PRICES_PER_MILLION[_DEFAULT_MODEL])
+    return (input_tokens / 1_000_000) * price_in + (output_tokens / 1_000_000) * price_out
 
 
 class OpenRouterProvider:
     """GenerationProvider implementation backed by OpenRouter's chat completions API."""
 
-    def __init__(self, model: str | None = None, api_key: str | None = None, timeout: int = _DEFAULT_TIMEOUT):
+    def __init__(
+        self,
+        model: str | None = None,
+        api_key: str | None = None,
+        timeout: int = _DEFAULT_TIMEOUT,
+        retry_delays: tuple[float, ...] = DEFAULT_RETRY_DELAYS,
+    ):
         self._model = model or _get_model()
         self._api_key = api_key or _get_api_key()
         self._timeout = timeout
+        self._retry_delays = retry_delays
         self.usage_log: list[dict] = []
         # OpenRouter's finish_reason for the most recent call ("stop", "length",
         # ...). "length" means the response was cut off by max_tokens — callers
@@ -144,8 +160,9 @@ class OpenRouterProvider:
     def _record_usage(self, usage: dict) -> None:
         input_tokens = usage.get("prompt_tokens", 0)
         output_tokens = usage.get("completion_tokens", 0)
-        cost = _estimate_cost(input_tokens, output_tokens)
+        cost = _estimate_cost(input_tokens, output_tokens, self._model)
         self.usage_log.append({"input_tokens": input_tokens, "output_tokens": output_tokens, "estimated_cost": cost})
+        del self.usage_log[:-MAX_USAGE_LOG_ENTRIES]
         logger.info(
             "openrouter_usage input_tokens=%d output_tokens=%d estimated_cost=$%.6f running_total=$%.6f",
             input_tokens,
@@ -165,6 +182,24 @@ class OpenRouterProvider:
             f"{total_output} output tokens, estimated cost ${self.total_estimated_cost():.4f}"
         )
 
+    def _post(self, **kwargs) -> requests.Response:
+        """requests.post with a few retries for failures that happen before any output: connection errors,
+        timeouts and transient HTTP statuses (429/5xx). Auth/credit/validation errors (401/402/400) are not retried."""
+        attempt = 0
+        while True:
+            try:
+                response = requests.post(**kwargs)
+                if getattr(response, "status_code", 200) in _RETRY_STATUS_CODES and attempt < len(self._retry_delays):
+                    logger.warning("openrouter_retry status=%s attempt=%d", response.status_code, attempt + 1)
+                else:
+                    return response
+            except (requests.ConnectionError, requests.Timeout) as exc:
+                if attempt >= len(self._retry_delays):
+                    raise
+                logger.warning("openrouter_retry error=%s attempt=%d", type(exc).__name__, attempt + 1)
+            time.sleep(self._retry_delays[attempt])
+            attempt += 1
+
     def generate(self, prompt: str, system: str, stream: bool = False, max_tokens: int = DEFAULT_MAX_TOKENS):
         if stream:
             return self._generate_stream(prompt, system, max_tokens)
@@ -173,8 +208,8 @@ class OpenRouterProvider:
     def _generate_sync(self, prompt: str, system: str, max_tokens: int) -> str:
         self.last_finish_reason = None
         try:
-            response = requests.post(
-                _API_URL,
+            response = self._post(
+                url=_API_URL,
                 headers=self._headers(),
                 json={
                     "model": self._model,
@@ -211,8 +246,8 @@ class OpenRouterProvider:
         # here already consumes the stream (Piece 6's SSE loop).
         self.last_finish_reason = None
         try:
-            response = requests.post(
-                _API_URL,
+            response = self._post(
+                url=_API_URL,
                 headers=self._headers(),
                 json={
                     "model": self._model,

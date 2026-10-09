@@ -59,3 +59,15 @@ ALLOWED_ORIGINS = [origin.strip() for origin in _raw_allowed_origins.split(",") 
 # only runs *after* the body has already been read and JSON-decoded). Generous
 # over MAX_MESSAGE_LENGTH (4000 chars) to leave room for JSON structure overhead.
 MAX_BODY_BYTES = 32_768
+
+# --- Retrieval floors (quality-fix plan, Step 2) -----------------------------------
+# Minimum best dense cosine similarity for a query to be answered rather than refused,
+# per mode. Env-overridable so tuning is a config change, not a deploy. Measured on the
+# 130-query eval set (eval/): see results/audit_report.md for the trade-off table;
+# out-of-scope ones <= 0.57 / <= 0.52.
+CHANAKYA_MIN_SCORE = float(os.environ.get("CHANAKYA_MIN_SCORE", "0.64"))
+CRISIS_MIN_SCORE = float(os.environ.get("CRISIS_MIN_SCORE", "0.65"))
+
+# Load the embedding models when the app starts instead of on the first request (which otherwise
+# takes ~12 s locally and ~60 s on the 1 GB VM). Set WARMUP_ON_STARTUP=false to skip, e.g. in tests.
+WARMUP_ON_STARTUP = os.environ.get("WARMUP_ON_STARTUP", "true").strip().lower() not in ("0", "false", "no")

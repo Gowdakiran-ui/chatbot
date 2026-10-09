@@ -66,7 +66,10 @@ class RetrievalResult(BaseModel):
 
     @property
     def top_dense_score(self) -> float:
-        return self.raw_hits[0].dense_score if self.raw_hits else 0.0
+        # The best dense similarity among the hits, NOT the first hit's: RRF ties are
+        # broken arbitrarily, so the first hit's dense score flipped the refuse/answer
+        # decision for the same query from one call to the next.
+        return max((hit.dense_score for hit in self.raw_hits), default=0.0)
 
 
 def retrieve_context(
@@ -102,11 +105,28 @@ def retrieve_context(
         for hit in hits
     ]
 
+    # Units to expand: one per hit, or one per group (e.g. crisis case) with all of that group's hits merged.
+    units: list[tuple[list, "RawHit"]] = []
+    if config.group_field and config.expand_group_fn:
+        by_group: dict[str, int] = {}
+        for hit, raw in zip(hits, raw_hits):
+            key = hit.payload.get(config.group_field)
+            if key in by_group:
+                units[by_group[key]][0].append(hit)
+            else:
+                by_group[key] = len(units)
+                units.append(([hit], raw))
+    else:
+        units = [([hit], raw) for hit, raw in zip(hits, raw_hits)]
+
     seen_texts: set[str] = set()
     chunks: list[RetrievedChunk] = []
     budget_used = 0
-    for hit, raw in zip(hits, raw_hits):
-        expanded_text = config.expand_fn(client, config.collection_alias, hit.payload)
+    for group_hits, raw in units:
+        if config.group_field and config.expand_group_fn:
+            expanded_text = config.expand_group_fn(client, config.collection_alias, [h.payload for h in group_hits])
+        else:
+            expanded_text = config.expand_fn(client, config.collection_alias, group_hits[0].payload)
         if expanded_text in seen_texts:
             continue  # another, higher- or equal-ranked hit already expanded to this same parent
         if chunks and budget_used + len(expanded_text) > MAX_CONTEXT_CHARS:
@@ -118,7 +138,7 @@ def retrieve_context(
                 score=raw.score,
                 dense_score=raw.dense_score,
                 text=expanded_text,
-                payload=hit.payload,
+                payload=group_hits[0].payload,
             )
         )
         budget_used += len(expanded_text)

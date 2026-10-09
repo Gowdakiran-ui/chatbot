@@ -31,10 +31,13 @@ def test_chanakya_prompt_instructs_citing_reference():
     assert "reference" in text
 
 
-def test_crisis_prompt_forbids_general_knowledge():
+def test_crisis_prompt_restricts_case_facts_to_the_material_and_labels_general_practice():
+    # Policy (2026-10, quality-fix plan): case facts come only from the supplied cases, but clearly
+    # labelled general-practice advice is allowed when no precedent exists.
     text = _read(Mode.CRISIS).lower()
-    assert "only" in text
-    assert "general knowledge" in text
+    assert "must come from that case" in text
+    assert "general practice (not drawn from a documented case)" in text
+    assert "never advise deception" in text
 
 
 def test_crisis_prompt_requires_case_citation_with_company_and_year():

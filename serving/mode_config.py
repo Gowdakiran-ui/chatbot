@@ -29,14 +29,16 @@ from pydantic import BaseModel, ConfigDict
 from qdrant_client import QdrantClient
 
 from db.crisis_qdrant_client import get_client as get_crisis_client
-from db.parent_expansion import expand_chanakya_chunk, expand_crisis_chunk
+from db.parent_expansion import expand_chanakya_chunk, expand_crisis_case, expand_crisis_chunk
 from db.qdrant_client import get_client as get_chanakya_client
+from serving.config import CHANAKYA_MIN_SCORE, CRISIS_MIN_SCORE
 from serving.sources import SourceInfoFn, chanakya_source_info, crisis_source_info, generic_source_info
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PROMPTS_DIR = PROJECT_ROOT / "prompts"
 
 ExpandFn = Callable[[QdrantClient, str, dict], str]
+ExpandGroupFn = Callable[[QdrantClient, str, list], str]
 ClientFactory = Callable[[], QdrantClient]
 
 
@@ -71,6 +73,12 @@ class ModeConfig(BaseModel):
     max_tokens: int
     # How a retrieved chunk is described to the client (label + metadata chips) in the `final` SSE event.
     source_info_fn: SourceInfoFn = generic_source_info
+    # Crisis answers cite a case by "Company (year)", so naming the label counts as using that chunk.
+    match_label_in_answer: bool = False
+    # When set, hits sharing this payload field (e.g. a crisis case_id) are merged into ONE context chunk built by
+    # expand_group_fn from all of their payloads, instead of one chunk per hit.
+    group_field: str | None = None
+    expand_group_fn: ExpandGroupFn | None = None
 
 
 MODE_CONFIG: dict[Mode, ModeConfig] = {
@@ -78,7 +86,7 @@ MODE_CONFIG: dict[Mode, ModeConfig] = {
         collection_alias="chanakya_kb",
         system_prompt_path=PROMPTS_DIR / "chanakya_system.md",
         top_k=5,
-        min_score=0.60,
+        min_score=CHANAKYA_MIN_SCORE,
         expand_fn=expand_chanakya_chunk,
         get_client=get_chanakya_client,
         requires_disclaimer=False,
@@ -93,12 +101,15 @@ MODE_CONFIG: dict[Mode, ModeConfig] = {
         # missed leadership quote (task.md). Real crisis hits score ~0.66-0.71
         # dense; irrelevant queries top out ~0.51 — 0.65 sits close under the
         # weakest real hit while staying well clear of noise.
-        min_score=0.65,
+        min_score=CRISIS_MIN_SCORE,
         expand_fn=expand_crisis_chunk,
         get_client=get_crisis_client,
         requires_disclaimer=True,
         max_tokens=1400,
         source_info_fn=crisis_source_info,
+        match_label_in_answer=True,
+        group_field="case_id",
+        expand_group_fn=expand_crisis_case,
     ),
 }
 

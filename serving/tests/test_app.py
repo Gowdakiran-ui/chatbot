@@ -173,13 +173,14 @@ def test_chat_refusal_path_never_calls_generation_provider(tmp_path, monkeypatch
 
 
 def test_chat_generation_path_streams_tokens_and_cites_sources(tmp_path, monkeypatch, client_app, fake_system_prompt):
-    rows = [{"id": "doc_a", "text": "alpha", "source": "x", "chunk_type": "prose", "parent_id": None}]
+    rows = [{"id": "doc_a", "text": "alpha beta gamma delta epsilon zeta", "source": "x", "chunk_type": "prose", "parent_id": None}]
     qdrant = _build_collection(tmp_path, rows)
-    config = _fake_config(qdrant, expand_chanakya_chunk, min_score=0.5, requires_disclaimer=False)
+    config = _fake_config(qdrant, expand_chanakya_chunk, min_score=0.1, requires_disclaimer=False)
     _install_mode_config(monkeypatch, Mode.CHANAKYA, config, fake_system_prompt)
 
     fake_provider = MagicMock()
-    fake_provider.generate.return_value = iter(["Hello", " world"])
+    # The answer reuses the chunk's own wording, so the chunk counts as used (and is cited).
+    fake_provider.generate.return_value = iter(["alpha beta gamma", " delta epsilon zeta"])
     app_mod.app.dependency_overrides[app_mod.get_provider] = lambda: fake_provider
 
     response = client_app.post("/chat", json={"message": "alpha", "mode": "chanakya", "conversation_id": "abc"})
@@ -188,11 +189,13 @@ def test_chat_generation_path_streams_tokens_and_cites_sources(tmp_path, monkeyp
     token_events = [e for e in events if e["type"] == "token"]
     final_event = events[-1]
 
-    assert [e["text"] for e in token_events] == ["Hello", " world"]
+    assert [e["text"] for e in token_events] == ["alpha beta gamma", " delta epsilon zeta"]
     assert final_event["type"] == "final"
     assert final_event["refused"] is False
     assert final_event["cited_chunk_ids"] == ["doc_a"]
-    assert final_event["sources"] == [{"id": "doc_a", "label": "x", "snippet": "alpha", "metadata": {}}]
+    assert final_event["sources"] == [
+        {"id": "doc_a", "label": "x", "snippet": "alpha beta gamma delta epsilon zeta", "metadata": {}}
+    ]
     assert "score" not in str(final_event["sources"]).lower()
     assert final_event["conversation_id"] == "abc"
     fake_provider.generate.assert_called_once()
@@ -259,6 +262,7 @@ def test_chat_generation_error_yields_error_event(tmp_path, monkeypatch, client_
 
     events = _parse_sse_events(response.text)
     assert events[-1]["type"] == "error"
-    assert "upstream provider exploded" in events[-1]["message"]
+    assert events[-1]["message"] == app_mod.USER_FACING_ERROR
+    assert "upstream provider exploded" not in events[-1]["message"]  # raw detail is logged, not shown to users
     assert not any(e["type"] == "final" for e in events)  # no fabricated success payload
     app_mod.app.dependency_overrides.clear()

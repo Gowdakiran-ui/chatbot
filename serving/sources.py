@@ -17,6 +17,9 @@ SNIPPET_MAX_CHARS = 200
 class SourceInfo(BaseModel):
     label: str
     metadata: dict
+    # Short description of what kind of text this is, shown to the model next to the label
+    # (e.g. "Chanakya's own text" vs "modern commentary") so it can attribute correctly.
+    kind: str = ""
 
 
 class SourceRef(BaseModel):
@@ -34,6 +37,15 @@ _CHANAKYA_SOURCE_NAMES = {
     "7_secrets_of_leadership": "7 Secrets of Leadership",
     "corporate_chanakya": "Corporate Chanakya",
     "chanakya_info": "Chanakya Info",
+}
+
+
+_CHANAKYA_SOURCE_KINDS = {
+    "arthashastra": "Chanakya's own text (translation)",
+    "chanakya_neeti": "Chanakya's own aphorisms (translation)",
+    "7_secrets_of_leadership": "modern commentary by the book's author, not Chanakya's words",
+    "corporate_chanakya": "modern commentary by the book's author, not Chanakya's words",
+    "chanakya_info": "background biography, not Chanakya's teaching",
 }
 
 
@@ -56,7 +68,11 @@ def chanakya_source_info(payload: dict) -> SourceInfo:
     reference = str(payload.get("reference") or "").strip()
     # "segment 47" is an ingestion artifact, not a citation a reader can use
     label = f"{name}, {reference}" if reference and not reference.lower().startswith("segment") else name
-    return SourceInfo(label=label, metadata={"domain_tags": list(payload.get("domain_tags") or [])})
+    return SourceInfo(
+        label=label,
+        metadata={"domain_tags": list(payload.get("domain_tags") or [])},
+        kind=_CHANAKYA_SOURCE_KINDS.get(slug, ""),
+    )
 
 
 def crisis_source_info(payload: dict) -> SourceInfo:
@@ -65,6 +81,7 @@ def crisis_source_info(payload: dict) -> SourceInfo:
     return SourceInfo(
         label=f"{company} ({year})" if year else company,
         metadata={key: payload.get(key) for key in ("crisis_type", "industry", "resolution_status") if payload.get(key)},
+        kind="documented crisis case",
     )
 
 
@@ -91,3 +108,36 @@ def build_sources(chunks, info_fn: SourceInfoFn) -> list[SourceRef]:
             SourceRef(id=chunk.chunk_id, label=info.label, snippet=make_snippet(snippet_text(chunk.payload)), metadata=info.metadata)
         )
     return refs
+
+
+# --- Which retrieved chunks did the answer actually use? ---------------------------------
+# Retrieval hands the model several chunks; showing all of them as "sources" surfaces ones
+# the answer never touched. A chunk counts as used when the answer reuses a run of its words
+# (a quote or close paraphrase) or, where the mode asks for it, names the chunk's own label
+# (crisis answers cite "Company (year)"). Pure and deterministic — no extra LLM call.
+SHINGLE_WORDS = 5
+
+
+def _words(text: str) -> list[str]:
+    return re.sub(r"[^a-z0-9 ]+", " ", text.lower().replace("’", "'").replace("'", "")).split()
+
+
+def _shingles(words: list[str], n: int = SHINGLE_WORDS) -> set[tuple[str, ...]]:
+    return {tuple(words[i : i + n]) for i in range(len(words) - n + 1)}
+
+
+def select_used_chunks(answer: str, chunks, info_fn: SourceInfoFn, match_label: bool) -> list:
+    answer_words = _words(answer)
+    answer_shingles = _shingles(answer_words)
+    answer_flat = " ".join(answer_words)
+    used = []
+    for chunk in chunks:
+        if _shingles(_words(chunk.text)) & answer_shingles:
+            used.append(chunk)
+            continue
+        if match_label:
+            name = re.sub(r"\s*\([^)]*\)\s*$", "", info_fn(chunk.payload).label)
+            name_words = " ".join(_words(name))
+            if name_words and name_words in answer_flat:
+                used.append(chunk)
+    return used

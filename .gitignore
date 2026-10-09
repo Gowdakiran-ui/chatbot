@@ -68,3 +68,7 @@ docs-internal/
 # --- Private keys (never commit) ---
 *.pem
 *.key
+
+# --- Regression run outputs (scratch) ---
+results/
+data/snapshots/
